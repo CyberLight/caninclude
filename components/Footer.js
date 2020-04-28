@@ -1,0 +1,26 @@
+const { html, Component } = require('htm/preact');
+
+class Footer extends Component {
+    render() {
+        const thanksTo = [
+            { href: 'https://caniuse.com', text: 'Can I Use' },
+            { href: 'https://html.spec.whatwg.org', text: 'HTML Spec WHATWG' },
+            { href: 'https://developer.mozilla.org', text: 'MDN' },
+        ]
+
+        return html`
+            <footer class="footer">
+                <div>
+                    <p>
+                        Special <b>thanks</b> to: ${thanksTo.map(link => 
+                            html`<a class="footer__link" href="${link.href}" target="_blank" rel="noopener noreferrer">${link.text}</a>, `)}
+                    </p>
+                    <p>
+                        <b>Built</b> by a <a class="footer__link" href="https://github.com/CyberLight/" target="_blank" rel="noopener noreferrer">@CyberLight</a> lonely developer.
+                    </p>
+                </div>
+            </footer>`;
+    }
+}
+
+module.exports = Footer;
