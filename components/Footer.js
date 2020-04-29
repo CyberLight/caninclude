@@ -16,7 +16,7 @@ class Footer extends Component {
                             html`<a class="footer__link" href="${link.href}" target="_blank" rel="noopener noreferrer">${link.text}</a>, `)}
                     </p>
                     <p>
-                        <b>Built</b> by a <a class="footer__link" href="https://github.com/CyberLight/" target="_blank" rel="noopener noreferrer">@CyberLight</a> lonely developer.
+                        <b>Built</b> by <a class="footer__link" href="https://github.com/CyberLight/" target="_blank" rel="noopener noreferrer">@CyberLight</a> a lone developer.
                     </p>
                 </div>
             </footer>`;
