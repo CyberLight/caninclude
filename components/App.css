@@ -359,6 +359,10 @@ input {
     .tag__section, .tag__section-result, .tag__section-result {
         width: 100%;
     }
+
+    .tag__section {
+        margin: 25px 0;
+    }
     
     .tip {
         margin-bottom: 20px;    
