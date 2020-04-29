@@ -73,6 +73,34 @@ const options = {
             }
         }
 
+        function reduceSupport(data) {
+            const sites = ['WebHTMLElement', 'WebAPI', 'caniuse'];
+            const browsers = sites.reduce((browsers, site) => {
+                if (!data[site]) return browsers;
+                const siteBrowsers = data[site].support.browsers;
+                for (let [browser,] of siteBrowsers) {
+                    browsers.add(browser)
+                }
+                return browsers;
+            }, new Set());
+
+            const table = {};
+            const cache = {};
+            for (const site of sites) {
+                for (const browser of browsers) {
+                    let supportBrowsers;
+                    if (data[site]) {
+                        supportBrowsers = cache[site] || Object.fromEntries(data[site].support.browsers);
+                        if (!cache[site]) cache[site] = supportBrowsers;
+                    }
+                    table[browser] = table[browser] || {};
+                    table[browser][site] = table[browser][site] || {};
+                    table[browser][site] = data[site] && supportBrowsers[browser] || '--';
+                }
+            }
+            return table;
+        }
+
         function getStatusesNearH4(h4) {
             const result = {};
             let currentNode = h4;
@@ -105,7 +133,8 @@ const options = {
                     support: parseSupport(currentNode.querySelector('.support'))
                 }
             }
-            return result;
+
+            return reduceSupport(result);
         }
 
         return elements.map(el => {
