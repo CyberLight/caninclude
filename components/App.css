@@ -350,10 +350,15 @@ input {
     min-width: 320px;
 }
 
+.tab__name, .tab__option {
+    display: none;
+}
+
 /* Media sections */
 @media only screen and (max-width: 860px) {
     .tag {
         justify-content: center;
+        position: relative;
     }
 
     .tag__section, .tag__section-result, .tag__section-result {
@@ -362,6 +367,8 @@ input {
 
     .tag__section {
         margin: 25px 0;
+        position: absolute;
+        margin-top: 124px;
     }
     
     .tip {
@@ -382,5 +389,53 @@ input {
 
     .search__container {    
         flex-direction: column;   
+    }
+
+    .tag__name {
+        position: initial;
+        border-radius: 0;
+    }
+
+    .tab__option {
+        visibility: hidden;
+    }
+    
+    .tab__name {
+        user-select: none;
+        display: block;
+        background: grey;
+        top: 79px;
+        text-transform: uppercase;
+        text-decoration: none;
+        position: absolute;
+        padding: 3px 13px;
+        margin: 0;
+        color: #fff;
+        border: none;
+        text-align: center;
+        text-decoration: none;
+        font-size: 1.5rem;
+    }
+
+    .tab__option:checked + .tab__name {
+        background: var(--color-red-contrast);
+    }
+
+    .tab__name:first-of-type {
+        left: 0;
+        border-radius: 0 10px 0 0;
+    }
+
+    .tab__name:last-of-type {
+        right: 0;
+        border-radius: 10px 0 0 0;
+    }
+
+    .tab__option:first-of-type:checked ~ .tag__section:first-of-type {
+        z-index: 1;
+    }
+
+    .tab__option:last-of-type:checked ~ .tag__section:last-of-type {
+        z-index: 1;
     }
 }
