@@ -12,7 +12,7 @@ const readFile = util.promisify(fs.readFile);
 const App = require('./components/App');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 let db = null;
 let css = '';
 
@@ -41,15 +41,51 @@ function streamBody(req, res, props = {}, css) {
     readable.pipe(res);
 } 
 
+function createSetOfKeyWords(tag, categoryName) {
+    const keyWordSet = tag.props[categoryName].reduce((o, item) => {
+        for (const keyWord of item.keywords) {
+            o.add(keyWord.text.toLowerCase());
+        }
+        return o;
+    }, new Set());
+
+    if (!keyWordSet.size) {
+        for (const tagName of tag.tags.list) {
+            keyWordSet.add(tagName);
+        }
+    }
+    return keyWordSet;
+}
+
 const queryRouter = express.Router();
 queryRouter.get('/include', (req, res) => {
     const { parent, child } = req.query;
     const parentTag = db[parent];
     const childTag = db[child];
-    const result = { unknown: true };
+
+    if (!parentTag || !childTag) return res.redirect('/');
+
+    let result = { unknown: true };
+    const tips = [];
+
+    const childKeyWordsSet = createSetOfKeyWords(childTag, 'Categories');
+    const parentKeyWordsSet = createSetOfKeyWords(parentTag, 'ContentModel');
+    const intersection = new Set([...parentKeyWordsSet].filter(x => childKeyWordsSet.has(x)));
+
+
+    if (parentKeyWordsSet.has('transparent')) {
+        result = { doubt: true, text: 'I doubt' };
+        tips.push(`Because the parent <${parent}/> tag has the Transparent Content option. You must change the current parent to the closest upper element from the current parent or check Content model section for clarification`)
+    } else if (!intersection.size) {
+        result = { fail: true, text: 'No, you can\'t!' };
+    } else {
+        result = { success: true, text: 'Yes, you can!' };
+    }
+
     const props = { 
         form: { parent, result, child }, 
-        tags: [childTag, result, parentTag]
+        tags: [childTag, result, parentTag],
+        tips
     };
     streamBody(req, res, props, css);
 });
@@ -58,7 +94,7 @@ app.get('/', (req, res) => {
     const result = { unknown: true };
     const props = { 
         form: { parent: '', child: '' }, 
-        tags: [ null, result, null ] 
+        tags: [] 
     };
     streamBody(req, res, props, css);
 });
