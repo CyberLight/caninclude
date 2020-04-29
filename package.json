@@ -5,12 +5,17 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "crawl": "node crawl"
+    "crawl": "node crawl",
+    "start": "node server",
+    "glitch:pack": "node ./scripts/glitch",
+    "glitch:unpack": "unzip -o glitch_release_*.zip -d . && rm glitch_release_*.zip && refresh",
+    "glitch:apply": "refresh"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "archiver": "^4.0.1",
     "clean-css": "^4.2.3",
     "express": "^4.17.1",
     "htm": "^3.0.4",
