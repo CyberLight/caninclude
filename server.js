@@ -25,10 +25,42 @@ function makeIndex(db) {
     }, {});
 }
 
+function compareVersions(v1, v2) {
+    const normalize = p => p.replace(/[a-z]+/g, '');
+    let v1Parts = v1.split('.').map(v => Number(normalize(v)));
+    let v2Parts = v2.split('.').map(v => Number(normalize(v)));
+    const diff = Math.abs(v1Parts.length - v2Parts.length);
+    if (v1Parts.length < v2Parts.length) {
+        v1Parts = v1Parts.concat(new Array(diff).fill(0));
+    } else if (v2Parts.length < v1Parts.length) {
+        v2Parts = v2Parts.concat(new Array(diff).fill(0));
+    }
+    let result = 0;
+    for (let index = 0; index < v1Parts.length; index++) {
+        const left = v1Parts[index];
+        const right = v2Parts[index];
+        if (left !== right) {
+            return Math.sign(left - right) * 1;
+        }
+    }
+    return result;
+}
+
+const usedOlderVersion = compareVersions('v12.14.1', process.version) === -1;
+
+function sendContent(content, res) {
+    if (usedOlderVersion) {
+        res.end(content);
+    } else {
+        const readable = Readable.from(content);
+        readable.pipe(res);
+    }
+}
+
 function streamBody(req, res, props = {}, css) {
     const body = renderToString(html`<${App} ...${props}/>`);
     const { styles } = new CleanCSS().minify(css);
-    const readable = Readable.from(`
+    sendContent(`
     <!DOCTYPE html>
     <html>
         <head>
@@ -37,8 +69,7 @@ function streamBody(req, res, props = {}, css) {
             <style>${styles}</style>
         </head>
         <body>${body}</body>
-    </html>`);
-    readable.pipe(res);
+    </html>`, res);
 } 
 
 function createSetOfKeyWords(tag, categoryName) {
@@ -60,8 +91,8 @@ function createSetOfKeyWords(tag, categoryName) {
 const queryRouter = express.Router();
 queryRouter.get('/include', (req, res) => {
     const { parent, child } = req.query;
-    const parentTag = db[parent];
-    const childTag = db[child];
+    const parentTag = db[parent.toLowerCase()];
+    const childTag = db[child.toLowerCase()];
 
     if (!parentTag || !childTag) return res.redirect('/');
 
@@ -104,6 +135,7 @@ app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/can', queryRouter);
 
 app.listen(port, async () => {
+    console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
     console.warn('[i] Begin read database');
     const jsonDb = await readFile('./spec.json');
     css = await readFile('./components/App.css', { encoding: 'utf8' });
