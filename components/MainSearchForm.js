@@ -8,9 +8,9 @@ class MainSearchForm extends Component {
             <form id="search" autocomplete="off" class="search__form" action="/can/include/" method="get">
                 <label class="head head--big" for="child"><${ColorText}>Can I Include*</${ColorText}></label><br/>
                 <div class="search__container">
-                    <input type="search" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child}"/>
+                    <input type="search" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
                     <label class="divider">to</label>
-                    <input type="search" id="parent" name="parent" autocomplete="off" placeholder="Parent tag name" value="${parent}"/>
+                    <input type="search" id="parent" name="parent" autocomplete="off" placeholder="Parent tag name" value="${parent.toLowerCase()}"/>
                     <button class="search__button" type="submit">?</button>
                 </div>
             </form>
