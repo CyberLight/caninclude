@@ -115,3 +115,5 @@ dist
 .pnp.*
 
 spec.json
+
+.DS_Store
