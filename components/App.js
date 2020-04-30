@@ -24,9 +24,9 @@ class App extends Component {
                 <${Tips} tips="${tips}"/>
                 <${Tags} show="${hasTags}">
                     <input checked id="first" class="tab__option" type="radio" name="tabs" value="first"/>
-                    <label class="tab__name" for="first">${tags[0].tags.list.map(item => `<${item}/>`).join(', ')}</label>
+                    <label class="tab__name" for="first">${tags.length && tags[0].tags.list.map(item => `<${item}/>`).join(', ')}</label>
                     <input id="second" class="tab__option" type="radio" name="tabs" value="second"/>
-                    <label class="tab__name" for="second">${tags[2].tags.list.map(item => `<${item}/>`).join(', ')}</label>
+                    <label class="tab__name" for="second">${tags.length && tags[2].tags.list.map(item => `<${item}/>`).join(', ')}</label>
                     <${Section} tag="${tags[0]}" accent="first"/>
                     <${ResultSection} ..."${tags[1]}"/>
                     <${Section} tag="${tags[2]}" accent="last"/>
