@@ -368,7 +368,7 @@ input {
     .tag__section {
         margin: 25px 0;
         position: absolute;
-        margin-top: 124px;
+        margin-top: 173px;
     }
     
     .tip {
@@ -394,6 +394,13 @@ input {
     .tag__name {
         position: initial;
         border-radius: 0;
+        background: none;
+        text-align: left;
+        padding: 3px 0;
+    }
+
+    .tag__name::before {
+        content: 'Tag: ';
     }
 
     .tab__option {
@@ -403,8 +410,8 @@ input {
     .tab__name {
         user-select: none;
         display: block;
-        background: grey;
-        top: 79px;
+        background: #350400;
+        top: 132px;
         text-transform: uppercase;
         text-decoration: none;
         position: absolute;
@@ -419,6 +426,7 @@ input {
 
     .tab__option:checked + .tab__name {
         background: var(--color-red-contrast);
+        color: #fff;
     }
 
     .tab__name:first-of-type {
@@ -433,9 +441,11 @@ input {
 
     .tab__option:first-of-type:checked ~ .tag__section:first-of-type {
         z-index: 1;
+        border-top: 3px solid var(--color-red-contrast);
     }
 
     .tab__option:last-of-type:checked ~ .tag__section:last-of-type {
         z-index: 1;
+        border-top: 3px solid var(--color-red-contrast);
     }
 }
