@@ -121,8 +121,16 @@ queryRouter.get('/include', (req, res) => {
     streamBody(req, res, props, css);
 });
 
+function checkHttps(req, res, next) {
+    if (!req.get('X-Forwarded-Proto') || req.get('X-Forwarded-Proto').indexOf("https") != -1) {
+        return next()
+    } else {
+        res.redirect(`https://${req.hostname}${req.url}`);
+    }
+}
+
+app.all('*', checkHttps);
 app.get('/', (req, res) => {
-    const result = { unknown: true };
     const props = { 
         form: { parent: '', child: '' }, 
         tags: [] 
