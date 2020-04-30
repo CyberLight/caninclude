@@ -46,7 +46,7 @@ function compareVersions(v1, v2) {
     return result;
 }
 
-const usedOlderVersion = compareVersions('v12.14.1', process.version) === -1;
+const usedOlderVersion = compareVersions('v12.14.1', process.version) === 1;
 
 function sendContent(content, res) {
     if (usedOlderVersion) {
@@ -106,7 +106,7 @@ queryRouter.get('/include', (req, res) => {
 
     if (parentKeyWordsSet.has('transparent')) {
         result = { doubt: true, text: 'I doubt' };
-        tips.push(`Because the parent <${parent}/> tag has the Transparent Content option. You must change the current parent to the closest upper element from the current parent or check Content model section for clarification`)
+        tips.push(`Because the parent <${parent}/> tag has the Transparent content option and the ability to nest the tag is not fully understood. Please look at the nearest top element from the <${parent}/> tag (in your HTML markup) or check the Content Model <${parent}/> tag section for more details.`)
     } else if (!intersection.size) {
         result = { fail: true, text: 'No, you can\'t!' };
     } else {
