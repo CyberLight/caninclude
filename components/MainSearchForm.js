@@ -11,7 +11,7 @@ class MainSearchForm extends Component {
                     <input type="search" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
                     <label class="divider">to</label>
                     <input type="search" id="parent" name="parent" autocomplete="off" placeholder="Parent tag name" value="${parent.toLowerCase()}"/>
-                    <button class="search__button" type="submit">?</button>
+                    <button class="search__button search__button--accent" type="submit">?</button>
                 </div>
             </form>
         </section>`;
