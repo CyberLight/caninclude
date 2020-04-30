@@ -13,6 +13,9 @@
   },
   "keywords": [],
   "author": "",
+  "engines": {
+    "node": "12.x"
+  },
   "license": "ISC",
   "dependencies": {
     "archiver": "^4.0.1",
