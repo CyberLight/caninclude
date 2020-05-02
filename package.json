@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "crawl": "node crawl",
     "start": "node server",
+    "dev": "nodemon ./server.js",
     "glitch:pack": "node ./scripts/glitch",
     "glitch:unpack": "unzip -o glitch_release_*.zip -d . && rm glitch_release_*.zip && refresh",
     "glitch:apply": "refresh"
@@ -22,6 +23,7 @@
     "clean-css": "^4.2.3",
     "express": "^4.17.1",
     "htm": "^3.0.4",
+    "nodemon": "^2.0.3",
     "preact": "^10.4.1",
     "preact-render-to-string": "^5.1.6",
     "puppeteer": "^3.0.1"

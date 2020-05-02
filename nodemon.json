@@ -1,0 +1,10 @@
+{
+    "ignore": [
+        "searchstat.json",
+        "spec.json"
+    ],
+    "watch": [
+        "components/",
+        "./*.js"
+    ]
+}
