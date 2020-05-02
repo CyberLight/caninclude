@@ -117,4 +117,7 @@ dist
 spec.json
 searchstat.json
 
+counters/*
+!counters/.keep
+
 .DS_Store
