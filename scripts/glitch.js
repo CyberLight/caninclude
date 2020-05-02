@@ -40,6 +40,6 @@ archive.file('package.json', { name: 'package.json' });
 archive.file('server.js', { name: 'server.js' });
 archive.file('utils.js', { name: 'utils.js' });
 archive.file('spec.json', { name: 'spec.json' });
-archive.append('[]', { name: 'searchstat.json' });
+archive.file('counters/.keep', { name: 'counters/.keep' });
 
 archive.finalize();
