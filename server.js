@@ -5,7 +5,7 @@ const express = require('express');
 const CleanCSS = require('clean-css');
 const { html } = require('htm/preact');
 const { Readable } = require('stream');
-const { Scheduler } = require('./utils');
+const { Scheduler, Counter, shortenNumber } = require('./utils');
 
 const App = require('./components/App');
 const renderToString = require('preact-render-to-string');
@@ -13,6 +13,8 @@ const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 const app = express();
 const scheduler = new Scheduler(1000 * 10);
+const counter = new Counter();
+
 const port = process.env.PORT || 3000;
 const messages = {
     makeTransparentContentWarning(parentFormatted) {
@@ -28,6 +30,7 @@ scheduler.start();
 scheduler.schedule(function () {
     const content = JSON.stringify([...searchStatMap]);
     writeFile('./searchstat.json', content).then(() => this.emit('next'));
+    counter.store();
 });
 
 function makeSortedMap(initValue = []) {
@@ -164,7 +167,10 @@ queryRouter.get('/include', (req, res) => {
     const props = { 
         form: { parent: parentFormatted, result, child: childFormatted }, 
         tags: [ childTag, result, parentTag ],
-        tips
+        tips,
+        request: {
+            count: counter.count
+        }
     };
 
     streamBody(req, res, props, css);
@@ -178,28 +184,14 @@ function checkHttps(req, res, next) {
     }
 }
 
-function shortenNumber(n, d) {
-    if (n < 1) return "<1";
-    var k = n = Math.floor(n);
-    if (n < 1000) return (n.toString().split("."))[0];
-    if (d !== 0) d = d || 1;
-
-    function shorten(a, b, c) {
-        var d = a.toString().split(".");
-        if (!d[1] || b === 0) {
-            return d[0] + c
-        } else {
-            return d[0] + "." + d[1].substring(0, b) + c;
-        }
-    }
-
-    k = n / 1e15; if (k >= 1) return shorten(k, d, "Q");
-    k = n / 1e12; if (k >= 1) return shorten(k, d, "T");
-    k = n / 1e9; if (k >= 1) return shorten(k, d, "B");
-    k = n / 1e6; if (k >= 1) return shorten(k, d, "M");
-    k = n / 1e3; if (k >= 1) return shorten(k, d, "K");
+function countRquests(req, res, next) {
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    req.ip = ip;
+    counter.register(ip);
+    next();
 }
 
+app.use(countRquests);
 app.all('*', checkHttps);
 app.get('/', (req, res) => {
     const props = { 
@@ -208,7 +200,10 @@ app.get('/', (req, res) => {
         tagStats: [...searchStatMap].map(([result, count]) => {
             const [child, parent, canInclude] = result.split('|');
             return { child, parent, canInclude, count: shortenNumber(count) };
-        })
+        }),
+        request: {
+            count: counter.count
+        }
     };
     streamBody(req, res, props, css);
 });
@@ -227,6 +222,7 @@ app.listen(port, async () => {
     console.warn('[i] Begin read searchstat.json');
     const searchStat = await readFile('./searchstat.json');
     searchStatMap = makeSortedMap(JSON.parse(searchStat));
+    counter.load().catch(e => console.warn(e.message));
     console.warn('[i] End of reading searchstat.json');
     console.log(`Example app listening at http://localhost:${port}`);
 });
