@@ -1,7 +1,8 @@
 const { html, Component } = require('htm/preact');
+const { shortenNumber } = require('../utils');
 
 class Footer extends Component {
-    render() {
+    render({ count }) {
         const thanksTo = [
             { href: 'https://caniuse.com', text: 'Can I Use' },
             { href: 'https://html.spec.whatwg.org', text: 'HTML Spec WHATWG' },
@@ -18,6 +19,7 @@ class Footer extends Component {
                     <p>
                         <b>Built</b> by <a class="footer__link" href="https://github.com/CyberLight/" target="_blank" rel="noopener noreferrer">@CyberLight</a> a lone developer.
                     </p>
+                    <p>Counter: ${shortenNumber(count)} req | ${new Date().toJSON().slice(0, 10)}</p>
                 </div>
             </footer>`;
     }
