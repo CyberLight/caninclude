@@ -5,21 +5,51 @@ const express = require('express');
 const CleanCSS = require('clean-css');
 const { html } = require('htm/preact');
 const { Readable } = require('stream');
-
-const renderToString = require('preact-render-to-string');
-const readFile = util.promisify(fs.readFile);
+const { Scheduler } = require('./utils');
 
 const App = require('./components/App');
-
+const renderToString = require('preact-render-to-string');
+const readFile = util.promisify(fs.readFile);
+const writeFile = util.promisify(fs.writeFile);
 const app = express();
+const scheduler = new Scheduler(1000 * 10);
 const port = process.env.PORT || 3000;
+const messages = {
+    makeTransparentContentWarning(parentFormatted) {
+        return `Because the parent <${parentFormatted}/> tag has the Transparent content option and the ability to nest the tag is not fully understood. Please look at the nearest top element from the <${parentFormatted}/> tag (in your HTML markup) or check the Content Model <${parentFormatted}/> tag section for more details.`;
+    }
+};
+
+let searchStatMap = makeSortedMap();
 let db = null;
 let css = '';
 
+scheduler.start();
+scheduler.schedule(function () {
+    const content = JSON.stringify([...searchStatMap]);
+    writeFile('./searchstat.json', content).then(() => this.emit('next'));
+});
+
+function makeSortedMap(initValue = []) {
+    let map = new Map(initValue); 
+    map[Symbol.iterator] = function* () {
+        yield* [...this.entries()].sort((a, b) => b[1] - a[1]);
+    }
+    return map;
+}
+
+function copyObj(o) {
+    return JSON.parse(JSON.stringify(o));
+}
+
 function makeIndex(db) {
     return db.reduce((o, el) => {
-        for (const tag of el.tags.list) {
-            o[tag] = el;
+        const names = el.tags.list.slice(0);
+        
+        for (const tag of names) {
+            const copyOfEl = copyObj(el);
+            copyOfEl.tags.list = [tag];
+            o[tag] = copyOfEl;
         }
         return o;
     }, {});
@@ -80,7 +110,7 @@ function createSetOfKeyWords(tag, categoryName) {
         return o;
     }, new Set());
 
-    if (!keyWordSet.size) {
+    if (!keyWordSet.size || keyWordSet.has('sectioning root')) {
         for (const tagName of tag.tags.list) {
             keyWordSet.add(tagName);
         }
@@ -88,36 +118,55 @@ function createSetOfKeyWords(tag, categoryName) {
     return keyWordSet;
 }
 
-const queryRouter = express.Router();
-queryRouter.get('/include', (req, res) => {
-    const { parent, child } = req.query;
-    const parentTag = db[parent.toLowerCase()];
-    const childTag = db[child.toLowerCase()];
+function updateSearchStatMap(pairKey) {
+    searchStatMap.set(pairKey, (searchStatMap.get(pairKey) || 0) + 1);
+    const ItemsCount = 10;
+    if (searchStatMap.size > ItemsCount) {
+        searchStatMap = makeSortedMap([...searchStatMap].slice(0, ItemsCount));
+    }
+}
 
-    if (!parentTag || !childTag) return res.redirect('/');
-
-    let result = { unknown: true };
-    const tips = [];
-
+function canInclude(childTag, parentTag) {
     const childKeyWordsSet = createSetOfKeyWords(childTag, 'Categories');
     const parentKeyWordsSet = createSetOfKeyWords(parentTag, 'ContentModel');
     const intersection = new Set([...parentKeyWordsSet].filter(x => childKeyWordsSet.has(x)));
 
-
     if (parentKeyWordsSet.has('transparent')) {
-        result = { doubt: true, text: 'I doubt' };
-        tips.push(`Because the parent <${parent}/> tag has the Transparent content option and the ability to nest the tag is not fully understood. Please look at the nearest top element from the <${parent}/> tag (in your HTML markup) or check the Content Model <${parent}/> tag section for more details.`)
+        return { type: 'Doubt', doubt: true, text: 'I doubt' };
     } else if (!intersection.size) {
-        result = { fail: true, text: 'No, you can\'t!' };
-    } else {
-        result = { success: true, text: 'Yes, you can!' };
+        return { type: 'No', fail: true, text: 'No, you can\'t!' };
+    } else if (intersection.size) {
+        return { type: 'Yes', success: true, text: 'Yes, you can!' };
+    }
+
+    return { unknown: true };
+}
+
+const queryRouter = express.Router();
+queryRouter.get('/include', (req, res) => {
+    const tips = [];
+    const { parent, child } = req.query;
+    const parentFormatted = parent.toLowerCase();
+    const childFormatted = child.toLowerCase();
+    
+    const parentTag = db[parentFormatted];
+    const childTag = db[childFormatted];
+    if (!parentTag || !childTag) return res.redirect('/');
+    
+    const result = canInclude(childTag, parentTag);
+    const pairKey = `${childFormatted}|${parentFormatted}|${result.type}`.toLowerCase();
+    updateSearchStatMap(pairKey);
+
+    if (result.doubt) {
+        tips.push(messages.makeTransparentContentWarning(parentFormatted));
     }
 
     const props = { 
-        form: { parent, result, child }, 
-        tags: [childTag, result, parentTag],
+        form: { parent: parentFormatted, result, child: childFormatted }, 
+        tags: [ childTag, result, parentTag ],
         tips
     };
+
     streamBody(req, res, props, css);
 });
 
@@ -129,11 +178,37 @@ function checkHttps(req, res, next) {
     }
 }
 
+function shortenNumber(n, d) {
+    if (n < 1) return "<1";
+    var k = n = Math.floor(n);
+    if (n < 1000) return (n.toString().split("."))[0];
+    if (d !== 0) d = d || 1;
+
+    function shorten(a, b, c) {
+        var d = a.toString().split(".");
+        if (!d[1] || b === 0) {
+            return d[0] + c
+        } else {
+            return d[0] + "." + d[1].substring(0, b) + c;
+        }
+    }
+
+    k = n / 1e15; if (k >= 1) return shorten(k, d, "Q");
+    k = n / 1e12; if (k >= 1) return shorten(k, d, "T");
+    k = n / 1e9; if (k >= 1) return shorten(k, d, "B");
+    k = n / 1e6; if (k >= 1) return shorten(k, d, "M");
+    k = n / 1e3; if (k >= 1) return shorten(k, d, "K");
+}
+
 app.all('*', checkHttps);
 app.get('/', (req, res) => {
     const props = { 
         form: { parent: '', child: '' }, 
-        tags: [] 
+        tags: [],
+        tagStats: [...searchStatMap].map(([result, count]) => {
+            const [child, parent, canInclude] = result.split('|');
+            return { child, parent, canInclude, count: shortenNumber(count) };
+        })
     };
     streamBody(req, res, props, css);
 });
@@ -149,5 +224,9 @@ app.listen(port, async () => {
     css = await readFile('./components/App.css', { encoding: 'utf8' });
     db = makeIndex(JSON.parse(jsonDb));
     console.warn('[i] End of reading database');
+    console.warn('[i] Begin read searchstat.json');
+    const searchStat = await readFile('./searchstat.json');
+    searchStatMap = makeSortedMap(JSON.parse(searchStat));
+    console.warn('[i] End of reading searchstat.json');
     console.log(`Example app listening at http://localhost:${port}`);
 });
