@@ -115,5 +115,6 @@ dist
 .pnp.*
 
 spec.json
+searchstat.json
 
 .DS_Store
