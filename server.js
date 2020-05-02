@@ -125,7 +125,7 @@ function updateSearchStatMap(pairKey) {
     searchStatMap.set(pairKey, (searchStatMap.get(pairKey) || 0) + 1);
     const ItemsCount = 10;
     if (searchStatMap.size > ItemsCount) {
-        searchStatMap = makeSortedMap([...searchStatMap].slice(0, ItemsCount));
+        searchStatMap = makeSortedMap([...searchStatMap].slice(-1 * ItemsCount));
     }
 }
 
@@ -187,7 +187,7 @@ function checkHttps(req, res, next) {
 function countRquests(req, res, next) {
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     req.ip = ip;
-    counter.register(ip);
+    counter.register(ip.split(',')[0]);
     next();
 }
 
