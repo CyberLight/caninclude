@@ -449,6 +449,11 @@ input {
     color: var(--color-text-dark);
 }
 
+.match-section--no {
+    border: dashed var(--color-red-contrast) 2px;
+    color: var(--color-red-contrast);
+}
+
 /* Media sections */
 @media only screen and (max-width: 860px) {
     .tag {
