@@ -369,11 +369,21 @@ input {
 }
 
 .tip {
-    background: var(--color-warn-bg);
     padding: .75rem 1rem;
     color: #444;
     text-align: left;
-    margin-top: -20px; 
+}
+
+.tip:first-of-type {
+    margin-top: -20px;
+}
+
+.tip--warning {
+    background: var(--color-warn-bg);
+}
+
+.tip--info {
+    background: var(--color-green);
 }
 
 .tip__item {
@@ -432,6 +442,12 @@ input {
     color: var(--color-red);
 }
 
+.match-section {
+    padding: 1px 8px;
+    border: dashed var(--color-text-dark) 2px;
+    color: var(--color-text-dark);
+}
+
 /* Media sections */
 @media only screen and (max-width: 860px) {
     .tag {
@@ -448,10 +464,6 @@ input {
         position: absolute;
         margin-top: 173px;
     }
-    
-    .tip {
-        margin-bottom: 20px;    
-    }
 
     .section-result__icon {
         width: 70px;
@@ -462,7 +474,7 @@ input {
         height: 100px;
         background-position: center;
         order: -1;
-        margin-top: 0;
+        margin-top: 20px;
     }
 
     .search {
