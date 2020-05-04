@@ -14,10 +14,10 @@ class Footer extends Component {
                 <div>
                     <p>
                         Special <b>thanks</b> to: ${thanksTo.map(link => 
-                            html`<a class="footer__link" href="${link.href}" target="_blank" rel="noopener noreferrer">${link.text}</a>, `)}
+                            html`<a target="_blank" rel="noopener noreferrer" class="footer__link" href="${link.href}" target="_blank" rel="noopener noreferrer">${link.text}</a>, `)}
                     </p>
                     <p>
-                        <b>Built</b> by <a class="footer__link" href="https://github.com/CyberLight/" target="_blank" rel="noopener noreferrer">@CyberLight</a> a lone developer.
+                        <b>Built</b> by <a target="_blank" rel="noopener noreferrer" class="footer__link" href="https://github.com/CyberLight/" target="_blank" rel="noopener noreferrer">@CyberLight</a> a lone developer.
                     </p>
                     <p>Counter: ${shortenNumber(count)} req | ${new Date().toJSON().slice(0, 10)}</p>
                 </div>

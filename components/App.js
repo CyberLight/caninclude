@@ -35,7 +35,7 @@ class App extends Component {
                 <${About} show="${!hasTags}">
                     <${MainSearchForm} ...${form} show="${!hasTags}"/>
                     <${QuickResults} tagStats="${tagStats}"/>
-                    <div class="about__description">This site helps you understand which tag you can include in another using the <a class="link--no-decoration" href="https://html.spec.whatwg.org"> WHATWG HTML specification </a></div>
+                    <div class="about__description">This site helps you understand which tag you can include in another using the <a target="_blank" rel="noopener noreferrer" class="link--no-decoration" href="https://html.spec.whatwg.org"> WHATWG HTML specification </a></div>
                     <div class="about__description">* This is an alpha version and uses a simple algorithm to test whether one tag can be included in another.</div>
                 </${About}>
             </main>

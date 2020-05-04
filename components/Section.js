@@ -6,7 +6,7 @@ class Section extends Component {
     render({ tag, accent }) {
         return tag && html`
         <section class="tag__section">
-            <a href="${tag.tags.href}" class="tag__name">${tag.tags.list.map(item => `<${item}/>`).join(', ')}</a>
+            <a target="_blank" rel="noopener noreferrer" href="${tag.tags.href}" class="tag__name">${tag.tags.list.map(item => `<${item}/>`).join(', ')}</a>
             <div class="tag__items tag__items--major ${accent === 'first' ? 'tag__items--accent' : ''}">
                 <p class="tag__head">Categories</p>
                 <${TagItems} items="${tag.props.Categories}"></${TagItems}>
