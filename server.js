@@ -190,7 +190,8 @@ queryRouter.get('/include', (req, res) => {
         tags: [ childTag, result, parentTag ],
         tips,
         request: {
-            count: counter.count
+            count: counter.count,
+            uniqCount: counter.uniqCount
         }
     };
 
@@ -223,7 +224,8 @@ app.get('/', (req, res) => {
             return { child, parent, canInclude, count: shortenNumber(count) };
         }),
         request: {
-            count: counter.count
+            count: counter.count,
+            uniqCount: counter.uniqCount
         }
     };
     streamBody(req, res, props, css);
