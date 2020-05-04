@@ -34,10 +34,15 @@ class Counter {
         this.currentDate = new Date().toJSON().slice(0, 10);
         this.currentCounterPath = `./counters/count${this.currentDate}.json`;
         this.previousCurrentDate = this.currentDate;
+        this.uniqTotalCount = 0;
     }
 
     get count() {
         return this.totalCount;
+    }
+
+    get uniqCount() {
+        return this.uniqTotalCount;
     }
 
     reset() {
@@ -56,7 +61,9 @@ class Counter {
         this.currentDate = date;
         this.currentCounterPath = `./counters/count${this.currentDate}.json`;
         const key = `${ip}|${this.currentDate}`;
-        this.data[key] = (this.data[key] || 0) + 1;
+        const prevCount = this.data[key] || 0;
+        if (!prevCount) { this.uniqTotalCount += 1; }
+        this.data[key] = prevCount + 1;
         this.totalCount += 1;
         this.previousCurrentDate = this.currentDate;
     }
@@ -68,7 +75,9 @@ class Counter {
     load() {
         return readFile(this.currentCounterPath).then(data => {
             this.data = JSON.parse(data);
-            this.totalCount = Object.values(this.data).reduce((sum, value) => sum + value, 0);
+            const values = Object.values(this.data);
+            this.totalCount = values.reduce((sum, value) => sum + value, 0);
+            this.uniqTotalCount = values.length;
         });
     }
 }
