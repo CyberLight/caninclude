@@ -18,10 +18,13 @@ const counter = new Counter();
 const port = process.env.PORT || 3000;
 const messages = {
     makeTransparentContentWarning(parentFormatted) {
-        return `Because the parent <${parentFormatted}/> tag has the Transparent content option and the ability to nest the tag is not fully understood. Please look at the nearest top element from the <${parentFormatted}/> tag (in your HTML markup) or check the "Content Model" <${parentFormatted}/> tag section for more details.`;
+        return `Because the parent <b>&lt;${parentFormatted}/&gt;</b> tag has the <b>Transparent</b> content option and the ability to nest the tag is not fully understood. Please look at the nearest top element from the <b>&lt${parentFormatted}/&gt;</b> tag (in your HTML markup) or check the <b>Content Model</b> of <b>&lt;${parentFormatted}/&gt;</b> tag section for more details.`;
     },
     makeAllMessagesConditional(parentFormatted, childFormatted) {
-        return `The parent "Content Model" section contains only conditional If statements. Please check if the child tag <${childFormatted}/> matches the conditions of the parent <${parentFormatted}/>, and make a decision based on this.`;
+        return `The parent <b>Content Model</b> section contains only conditional statements. Please check if the child tag <b>&lt;${childFormatted}/&gt;</b> matches the conditions of the parent <b>&lt;${parentFormatted}/&gt;</b>, and make a decision based on this.`;
+    },
+    makeMatched(matched, parentFormatted, childFormatted) {
+        return `The parent tag <b>&lt;${parentFormatted}/&gt;</b> with the <b>Content model</b> section and the child tag <b>&lt;${childFormatted}/&gt;</b> with the <b>Categories</b> section have matches: ${matched.map(match => `<b class="match-section">${match}</b>`)}`;
     }
 };
 
@@ -136,6 +139,7 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
     const childKeyWordsSet = createSetOfKeyWords(childTag, 'Categories', true);
     const parentKeyWordsSet = createSetOfKeyWords(parentTag, 'ContentModel');
     const intersection = new Set([...parentKeyWordsSet].filter(x => childKeyWordsSet.has(x)));
+    const initialMatches = [...intersection];
 
     const { negativeKeywords } = parentTag.props.sections['ContentModel'];
     const { conditionalKeywords } = childTag.props.sections['Categories'];
@@ -145,9 +149,9 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
         intersection.delete(el);
     });
 
-    const allConditional = parentTag.props.ContentModel.every(o => o.textContent.startsWith('If'))
+    const allConditional = parentTag.props.ContentModel.every(o => o.textContent.startsWith('If') || o.textContent.startsWith('Either:') || o.textContent.startsWith('Or:'))
     if (allConditional) {
-        return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeAllMessagesConditional(parentFormatted, childFormatted) };
+        return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeAllMessagesConditional(parentFormatted, childFormatted), matched: initialMatches };
     }
 
     const hasNegativeKeywords = new Set(negativeKeywords.filter(x => childKeyWordsSet.has(x)));
@@ -156,14 +160,14 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
     }
 
     if (parentKeyWordsSet.has('transparent')) {
-        return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeTransparentContentWarning(parentFormatted) };
+        return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeTransparentContentWarning(parentFormatted), matched: initialMatches };
     } else if (!intersection.size) {
-        return { type: 'No', fail: true, text: 'No, you can\'t!' };
+        return { type: 'No', fail: true, text: 'No, you can\'t!', matched: [] };
     } else if (intersection.size) {
-        return { type: 'Yes', success: true, text: 'Yes, you can!' };
+        return { type: 'Yes', success: true, text: 'Yes, you can!', matched: initialMatches };
     }
 
-    return { unknown: true };
+    return { unknown: true, matched: [] };
 }
 
 const queryRouter = express.Router();
@@ -182,7 +186,13 @@ queryRouter.get('/include', (req, res) => {
     updateSearchStatMap(pairKey);
 
     if (result.doubt) {
-        tips.push(result.message);
+        tips.push({ messages: [result.message], type: 'warning' });
+    }
+
+    if (result.matched && result.matched.length) {
+        tips.push({ messages: [
+            messages.makeMatched(result.matched, parentFormatted, childFormatted)
+        ], type: 'info' });
     }
 
     const props = { 
