@@ -39,7 +39,7 @@ class App extends Component {
                     <div class="about__description">* This is an alpha version and uses a simple algorithm to test whether one tag can be included in another.</div>
                 </${About}>
             </main>
-            <${Footer} count="${request.count}"/>
+            <${Footer} count="${request.count}" uniqCount="${request.uniqCount}"/>
         </div>`;
     }
 }
