@@ -6,7 +6,8 @@ class MainSearchForm extends Component {
         return show && html`
         <section class="search">
             <form id="search" autocomplete="off" class="search__form" action="/can/include/" method="get">
-                <label class="head head--big" for="child"><${ColorText}>Can I Include*</${ColorText}></label><br/>
+                <label class="head head--big" for="child"><${ColorText}>Can I Include*</${ColorText}></label>
+                <p class="search__spec-version"><span class="head head--small">Based on HTML spec | Last Updated 2 May 2020</span></p><br/>
                 <div class="search__container">
                     <input type="text" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
                     <label class="divider">to</label>
