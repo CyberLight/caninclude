@@ -18,13 +18,16 @@ const counter = new Counter();
 const port = process.env.PORT || 3000;
 const messages = {
     makeTransparentContentWarning(parentFormatted) {
-        return `Because the parent <b>&lt;${parentFormatted}/&gt;</b> tag has the <b>Transparent</b> content option and the ability to nest the tag is not fully understood. Please look at the nearest top element from the <b>&lt${parentFormatted}/&gt;</b> tag (in your HTML markup) or check the <b>Content Model</b> of <b>&lt;${parentFormatted}/&gt;</b> tag section for more details.`;
+        return `Because the parent <b>&lt;${parentFormatted}/&gt;</b> tag has the <b>Transparent</b> content option and the ability to nest the tag is not fully understood.<br/> Please look at the nearest top element from the <b>&lt${parentFormatted}/&gt;</b> tag (in your HTML markup) or check the <b>Content Model</b> of <b>&lt;${parentFormatted}/&gt;</b> tag section for more details.`;
     },
     makeAllMessagesConditional(parentFormatted, childFormatted) {
         return `The parent <b>Content Model</b> section contains only conditional statements. Please check if the child tag <b>&lt;${childFormatted}/&gt;</b> matches the conditions of the parent <b>&lt;${parentFormatted}/&gt;</b>, and make a decision based on this.`;
     },
-    makeMatched(matched, parentFormatted, childFormatted) {
-        return `The parent tag <b>&lt;${parentFormatted}/&gt;</b> with the <b>Content model</b> section and the child tag <b>&lt;${childFormatted}/&gt;</b> with the <b>Categories</b> section have matches: ${matched.map(match => `<b class="match-section">${match}</b>`)}`;
+    makeMatched(matched, parentFormatted, childFormatted, negative) {
+        const markMatched = s => {
+            return negative && negative.has(s) ? `<b class="match-section match-section--no">NO <s>${s}</s> in parent</b>` : `<b class="match-section">${s}</b>`; 
+        };
+        return `The parent tag <b>&lt;${parentFormatted}/&gt;</b> with the <b>Content model</b> section and the child tag <b>&lt;${childFormatted}/&gt;</b> with the <b>Categories</b> section have matches: ${matched.map(match => markMatched(match))}`;
     }
 };
 
@@ -160,11 +163,29 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
     }
 
     if (parentKeyWordsSet.has('transparent')) {
-        return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeTransparentContentWarning(parentFormatted), matched: initialMatches };
+        return { 
+            type: 'Doubt', 
+            doubt: true, 
+            text: 'I doubt', 
+            message: messages.makeTransparentContentWarning(parentFormatted), 
+            matched: initialMatches, 
+            negative: new Set(negativeKeywords) 
+        };
     } else if (!intersection.size) {
-        return { type: 'No', fail: true, text: 'No, you can\'t!', matched: [] };
+        return { 
+            type: 'No', 
+            fail: true, 
+            text: 'No, you can\'t!', 
+            matched: [] 
+        };
     } else if (intersection.size) {
-        return { type: 'Yes', success: true, text: 'Yes, you can!', matched: initialMatches };
+        return { 
+            type: 'Yes', 
+            success: true, 
+            text: 'Yes, you can!', 
+            matched: initialMatches,
+            negative: new Set(negativeKeywords) 
+        };
     }
 
     return { unknown: true, matched: [] };
@@ -191,7 +212,7 @@ queryRouter.get('/include', (req, res) => {
 
     if (result.matched && result.matched.length) {
         tips.push({ messages: [
-            messages.makeMatched(result.matched, parentFormatted, childFormatted)
+            messages.makeMatched(result.matched, parentFormatted, childFormatted, result.negative)
         ], type: 'info' });
     }
 
