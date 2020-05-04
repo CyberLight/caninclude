@@ -150,7 +150,7 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
     });
 
     const allConditional = parentTag.props.ContentModel.every(o => o.textContent.startsWith('If') || o.textContent.startsWith('Either:') || o.textContent.startsWith('Or:'))
-    if (allConditional) {
+    if (allConditional && initialMatches.length) {
         return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeAllMessagesConditional(parentFormatted, childFormatted), matched: initialMatches };
     }
 
