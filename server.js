@@ -18,7 +18,10 @@ const counter = new Counter();
 const port = process.env.PORT || 3000;
 const messages = {
     makeTransparentContentWarning(parentFormatted) {
-        return `Because the parent <${parentFormatted}/> tag has the Transparent content option and the ability to nest the tag is not fully understood. Please look at the nearest top element from the <${parentFormatted}/> tag (in your HTML markup) or check the Content Model <${parentFormatted}/> tag section for more details.`;
+        return `Because the parent <${parentFormatted}/> tag has the Transparent content option and the ability to nest the tag is not fully understood. Please look at the nearest top element from the <${parentFormatted}/> tag (in your HTML markup) or check the "Content Model" <${parentFormatted}/> tag section for more details.`;
+    },
+    makeAllMessagesConditional(parentFormatted, childFormatted) {
+        return `The parent "Content Model" section contains only conditional If statements. Please check if the child tag <${childFormatted}/> matches the conditions of the parent <${parentFormatted}/>, and make a decision based on this.`;
     }
 };
 
@@ -48,7 +51,7 @@ function copyObj(o) {
 function makeIndex(db) {
     return db.reduce((o, el) => {
         const names = el.tags.list.slice(0);
-        
+
         for (const tag of names) {
             const copyOfEl = copyObj(el);
             copyOfEl.tags.list = [tag];
@@ -105,7 +108,7 @@ function streamBody(req, res, props = {}, css) {
     </html>`, res);
 } 
 
-function createSetOfKeyWords(tag, categoryName) {
+function createSetOfKeyWords(tag, categoryName, forceAddTagName = false) {
     const keyWordSet = tag.props[categoryName].reduce((o, item) => {
         for (const keyWord of item.keywords) {
             o.add(keyWord.text.toLowerCase());
@@ -113,7 +116,7 @@ function createSetOfKeyWords(tag, categoryName) {
         return o;
     }, new Set());
 
-    if (!keyWordSet.size || keyWordSet.has('sectioning root')) {
+    if (!keyWordSet.size || keyWordSet.has('sectioning root') || forceAddTagName) {
         for (const tagName of tag.tags.list) {
             keyWordSet.add(tagName);
         }
@@ -129,13 +132,31 @@ function updateSearchStatMap(pairKey) {
     }
 }
 
-function canInclude(childTag, parentTag) {
-    const childKeyWordsSet = createSetOfKeyWords(childTag, 'Categories');
+function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
+    const childKeyWordsSet = createSetOfKeyWords(childTag, 'Categories', true);
     const parentKeyWordsSet = createSetOfKeyWords(parentTag, 'ContentModel');
     const intersection = new Set([...parentKeyWordsSet].filter(x => childKeyWordsSet.has(x)));
 
+    const { negativeKeywords } = parentTag.props.sections['ContentModel'];
+    const { conditionalKeywords } = childTag.props.sections['Categories'];
+    
+    conditionalKeywords.forEach(el => {
+        childKeyWordsSet.delete(el);
+        intersection.delete(el);
+    });
+
+    const allConditional = parentTag.props.ContentModel.every(o => o.textContent.startsWith('If'))
+    if (allConditional) {
+        return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeAllMessagesConditional(parentFormatted, childFormatted) };
+    }
+
+    const hasNegativeKeywords = new Set(negativeKeywords.filter(x => childKeyWordsSet.has(x)));
+    if (hasNegativeKeywords.size > 0) {
+        return { type: 'No', fail: true, text: 'No, you can\'t!' };
+    }
+
     if (parentKeyWordsSet.has('transparent')) {
-        return { type: 'Doubt', doubt: true, text: 'I doubt' };
+        return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeTransparentContentWarning(parentFormatted) };
     } else if (!intersection.size) {
         return { type: 'No', fail: true, text: 'No, you can\'t!' };
     } else if (intersection.size) {
@@ -155,13 +176,13 @@ queryRouter.get('/include', (req, res) => {
     const parentTag = db[parentFormatted];
     const childTag = db[childFormatted];
     if (!parentTag || !childTag) return res.redirect('/');
-    
-    const result = canInclude(childTag, parentTag);
+
+    const result = canInclude(childTag, parentTag, childFormatted, parentFormatted);
     const pairKey = `${childFormatted}|${parentFormatted}|${result.type}`.toLowerCase();
     updateSearchStatMap(pairKey);
 
     if (result.doubt) {
-        tips.push(messages.makeTransparentContentWarning(parentFormatted));
+        tips.push(result.message);
     }
 
     const props = { 
