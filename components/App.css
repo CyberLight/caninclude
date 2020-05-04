@@ -402,6 +402,7 @@ input {
 
 .quick-results__table {
     display: initial;
+    font-size: large;
 }
 
 .quick-results__header {
