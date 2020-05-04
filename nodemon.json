@@ -6,5 +6,6 @@
     "watch": [
         "components/",
         "./*.js"
-    ]
+    ],
+    "ext": "js, css"
 }
