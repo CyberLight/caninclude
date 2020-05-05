@@ -25,6 +25,7 @@ const options = {
     const browser = await puppeteer.launch(options);
     const page = await browser.newPage();
     await page.goto(Html5SpecURL);
+    const version = await page.$eval('#living-standard .pubdate', el => el.textContent);
     const result = await page.$$eval('h4[id^="the-"]~.element', elements => {
         function nearest(element, selector) {
             if (!element) return null;
@@ -147,6 +148,6 @@ const options = {
             }
         });
     });
-    await writeFileAsync('spec.json', JSON.stringify(result, ' ', 2));
+    await writeFileAsync('spec.json', JSON.stringify({ version, result }, ' ', 2));
     await browser.close();
 }();
