@@ -10,7 +10,7 @@ const About = require('./About');
 const QuickResults = require('./QuickResults');
 
 class App extends Component {
-    render({ form, tags, tips = [], tagStats, request, specVersion }) {
+    render({ form, tags, tips = [], tagStats, request, specVersion, votes }) {
         const hasTags = tags.length > 0;
 
         return html`
@@ -29,7 +29,7 @@ class App extends Component {
                     <input id="second" class="tab__option" type="radio" name="tabs" value="second"/>
                     <label class="tab__name" for="second">${tags.length && tags[2].tags.list.map(item => `<${item}/>`).join(', ')}</label>
                     <${Section} tag="${tags[0]}" accent="first"/>
-                    <${ResultSection} ..."${tags[1]}"/>
+                    <${ResultSection} ..."${tags[1]}" request="${request}" votes="${votes}"/>
                     <${Section} tag="${tags[2]}" accent="last"/>
                 </${Tags}>
                 <${About} show="${!hasTags}">
