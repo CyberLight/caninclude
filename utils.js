@@ -48,6 +48,7 @@ class Counter {
     reset() {
         this.data = {};
         this.totalCount = 0;
+        this.uniqTotalCount = 0;
     }
 
     async register(ip) {
