@@ -41,5 +41,6 @@ archive.file('server.js', { name: 'server.js' });
 archive.file('utils.js', { name: 'utils.js' });
 archive.file('spec.json', { name: 'spec.json' });
 archive.file('counters/.keep', { name: 'counters/.keep' });
+archive.file('votes/.keep', { name: 'votes/.keep' });
 
 archive.finalize();
