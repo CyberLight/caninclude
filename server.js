@@ -34,6 +34,7 @@ const messages = {
 let searchStatMap = makeSortedMap();
 let db = null;
 let css = '';
+let specVersion = '';
 
 scheduler.start();
 scheduler.schedule(function () {
@@ -55,7 +56,7 @@ function copyObj(o) {
 }
 
 function makeIndex(db) {
-    return db.reduce((o, el) => {
+    return db.result.reduce((o, el) => {
         const names = el.tags.list.slice(0);
 
         for (const tag of names) {
@@ -229,7 +230,8 @@ queryRouter.get('/include', (req, res) => {
         request: {
             count: counter.count,
             uniqCount: counter.uniqCount
-        }
+        },
+        specVersion
     };
 
     streamBody(req, res, props, css);
@@ -263,7 +265,8 @@ app.get('/', (req, res) => {
         request: {
             count: counter.count,
             uniqCount: counter.uniqCount
-        }
+        },
+        specVersion
     };
     streamBody(req, res, props, css);
 });
@@ -277,7 +280,9 @@ app.listen(port, async () => {
     console.warn('[i] Begin read database');
     const jsonDb = await readFile('./spec.json');
     css = await readFile('./components/App.css', { encoding: 'utf8' });
-    db = makeIndex(JSON.parse(jsonDb));
+    const parsedDb = JSON.parse(jsonDb);
+    specVersion = parsedDb.version;
+    db = makeIndex(parsedDb);
     console.warn('[i] End of reading database');
     console.warn('[i] Begin read searchstat.json');
     const searchStat = await readFile('./searchstat.json');
