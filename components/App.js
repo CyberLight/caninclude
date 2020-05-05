@@ -10,7 +10,7 @@ const About = require('./About');
 const QuickResults = require('./QuickResults');
 
 class App extends Component {
-    render({ form, tags, tips = [], tagStats, request }) {
+    render({ form, tags, tips = [], tagStats, request, specVersion }) {
         const hasTags = tags.length > 0;
 
         return html`
@@ -33,7 +33,7 @@ class App extends Component {
                     <${Section} tag="${tags[2]}" accent="last"/>
                 </${Tags}>
                 <${About} show="${!hasTags}">
-                    <${MainSearchForm} ...${form} show="${!hasTags}"/>
+                    <${MainSearchForm} ...${form} show="${!hasTags}" specVersion="${specVersion}"/>
                     <${QuickResults} tagStats="${tagStats}"/>
                     <div class="about__description">This site helps you understand which tag you can include in another using the <a target="_blank" rel="noopener noreferrer" class="link--no-decoration" href="https://html.spec.whatwg.org"> WHATWG HTML specification </a></div>
                     <div class="about__description">* This is an alpha version and uses a simple algorithm to test whether one tag can be included in another.</div>
