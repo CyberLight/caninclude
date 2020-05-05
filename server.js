@@ -2,10 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const express = require('express');
+const cookieSession = require('cookie-session');
+const { v4: uuidv4 } = require('uuid');
 const CleanCSS = require('clean-css');
 const { html } = require('htm/preact');
 const { Readable } = require('stream');
-const { Scheduler, Counter, shortenNumber } = require('./utils');
+const { Scheduler, Counter, shortenNumber, LikeManager } = require('./utils');
 
 const App = require('./components/App');
 const renderToString = require('preact-render-to-string');
@@ -14,6 +16,7 @@ const writeFile = util.promisify(fs.writeFile);
 const app = express();
 const scheduler = new Scheduler(1000 * 10);
 const counter = new Counter();
+const likeManager = new LikeManager();
 
 const port = process.env.PORT || 3000;
 const messages = {
@@ -37,10 +40,12 @@ let css = '';
 let specVersion = '';
 
 scheduler.start();
-scheduler.schedule(function () {
+scheduler.schedule(async function () {
     const content = JSON.stringify([...searchStatMap]);
-    writeFile('./searchstat.json', content).then(() => this.emit('next'));
-    counter.store();
+    await writeFile('./searchstat.json', content);
+    await counter.store();
+    await likeManager.store();
+    this.emit('next');
 });
 
 function makeSortedMap(initValue = []) {
@@ -200,14 +205,29 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
 
 const queryRouter = express.Router();
 queryRouter.get('/include', (req, res) => {
+    const { user } = req.session;
     const tips = [];
-    const { parent, child } = req.query;
+    const { parent, child, like, dislike, unlike, undislike } = req.query;
+    
     const parentFormatted = parent.toLowerCase();
     const childFormatted = child.toLowerCase();
     
     const parentTag = db[parentFormatted];
     const childTag = db[childFormatted];
     if (!parentTag || !childTag) return res.redirect('/');
+    const url = `?parent=${parentFormatted}&child=${childFormatted}`;
+
+    if (typeof like !== 'undefined') {
+        likeManager.like(user, parentFormatted, childFormatted);
+    } else if (typeof dislike !== 'undefined') {
+        likeManager.dislike(user, parentFormatted, childFormatted);
+    } else if (typeof unlike !== 'undefined') {
+        likeManager.delLike(user, parentFormatted, childFormatted);
+    } else if (typeof undislike !== 'undefined') {
+        likeManager.delDislike(user, parentFormatted, childFormatted);
+    }
+
+    const votes = likeManager.votes(user, parentFormatted, childFormatted);
 
     const result = canInclude(childTag, parentTag, childFormatted, parentFormatted);
     const pairKey = `${childFormatted}|${parentFormatted}|${result.type}`.toLowerCase();
@@ -229,9 +249,11 @@ queryRouter.get('/include', (req, res) => {
         tips,
         request: {
             count: counter.count,
-            uniqCount: counter.uniqCount
+            uniqCount: counter.uniqCount,
+            url
         },
-        specVersion
+        specVersion,
+        votes
     };
 
     streamBody(req, res, props, css);
@@ -248,12 +270,31 @@ function checkHttps(req, res, next) {
 function countRquests(req, res, next) {
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     req.ip = ip;
+    const { like, dislike, unlike, undislike } = req.query;
+    if ([like, dislike, unlike, undislike].some(x => typeof x !== 'undefined')) return next();
     counter.register(ip.split(',')[0]);
     next();
 }
 
-app.use(countRquests);
+app.use(cookieSession({
+    name: 'session',
+    keys: [process.env.COOKIE_KEY || 'not-for-production-cookie-key'],
+    signed: true,
+    overwrite: true,
+    // Cookie Options
+    maxAge: 10 * 365 * 24 * 60 * 60 * 1000 // 10 year
+}));
+
 app.all('*', checkHttps);
+app.use(countRquests);
+app.use(function(req, res, next) {
+    if (!req.session.user) {
+        const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        req.session.user = `${uuidv4()}${clientIp}`;
+        req.session.userAcceptCookie = false;
+    }
+    next();
+});
 app.get('/', (req, res) => {
     const props = { 
         form: { parent: '', child: '' }, 
@@ -289,5 +330,6 @@ app.listen(port, async () => {
     searchStatMap = makeSortedMap(JSON.parse(searchStat));
     counter.load().catch(e => console.warn(e.message));
     console.warn('[i] End of reading searchstat.json');
+    await likeManager.load();
     console.log(`Example app listening at http://localhost:${port}`);
 });
