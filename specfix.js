@@ -33,7 +33,7 @@ const writeFile = util.promisify(fs.writeFile);
         return { negativeKeywords: [...new Set(negativeKeywords)].map(item => item.toLowerCase()), conditionalKeywords: [...new Set(conditionalKeywords)].map(item => item.toLowerCase()) };
     }
 
-    const processed = specJson.map(tag => {
+    const processed = specJson.result.map(tag => {
         tag.props.sections = tag.props.sections || {};
         let sectionProps = processNegative(tag.props.Categories);
         tag.props.sections['Categories'] = sectionProps;
@@ -43,5 +43,5 @@ const writeFile = util.promisify(fs.writeFile);
         return tag;
     });
 
-    await writeFile('./spec.json', JSON.stringify(processed, ' ', 2));
+    await writeFile('./spec.json', JSON.stringify({ version: specJson.version, result: processed }, ' ', 2));
 }();
