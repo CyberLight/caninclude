@@ -120,4 +120,7 @@ searchstat.json
 counters/*
 !counters/.keep
 
+votes/*
+!votes/.keep
+
 .DS_Store
