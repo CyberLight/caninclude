@@ -492,6 +492,7 @@ input {
     background-color: black;
     padding: 20px;
     line-height: 33px;
+    text-align: center;
 }
 
 .cookie-consent__accept-button {
