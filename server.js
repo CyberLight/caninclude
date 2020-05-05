@@ -108,6 +108,17 @@ function streamBody(req, res, props = {}, css) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta property="og:title" content="Can I Include">
+            <meta property="og:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
+            <meta property="og:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
+            <meta property="og:url" content="https://caninclude.glitch.me/">
+            <meta name="twitter:card" content="summary_large_image">
+            <meta property="og:site_name" content="Can I Include">
+
+            <meta name="twitter:title" content="Can I Include">
+            <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
+            <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
+            <meta name="twitter:image:alt" content="Can I Include [main page]">
             <style>${styles}</style>
         </head>
         <body>${body}</body>
@@ -152,27 +163,22 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
         intersection.delete(el);
     });
 
-    const allConditional = parentTag.props.ContentModel.every(o => o.textContent.startsWith('If') || o.textContent.startsWith('Either:') || o.textContent.startsWith('Or:'))
-    if (allConditional && initialMatches.length) {
-        return { type: 'Doubt', doubt: true, text: 'I doubt', message: messages.makeAllMessagesConditional(parentFormatted, childFormatted), matched: initialMatches };
-    }
-
     const hasNegativeKeywords = new Set(negativeKeywords.filter(x => childKeyWordsSet.has(x)));
-    if (hasNegativeKeywords.size > 0) {
+    if (hasNegativeKeywords.has(childFormatted)) {
         return { type: 'No', fail: true, text: 'No, you can\'t!' };
     }
 
     if (parentKeyWordsSet.has('transparent')) {
         return { 
-            type: 'Doubt', 
-            doubt: true, 
-            text: 'I doubt', 
-            message: messages.makeTransparentContentWarning(parentFormatted), 
-            matched: initialMatches, 
-            negative: new Set(negativeKeywords) 
+            type: 'Doubt',
+            doubt: true,
+            text: 'I doubt',
+            message: messages.makeTransparentContentWarning(parentFormatted),
+            matched: initialMatches,
+            negative: new Set(negativeKeywords)
         };
     } else if (!intersection.size) {
-        return { 
+        return {
             type: 'No', 
             fail: true, 
             text: 'No, you can\'t!', 
