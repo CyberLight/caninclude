@@ -159,7 +159,7 @@ input {
 }
 
 .tag__section {
-    max-width: 900px;
+    max-width: 40%;
     margin: 25px;
     width: 40%;
     background-color: var(--color-section-bg);
@@ -214,8 +214,11 @@ input {
 }
 
 .section-result__text {
-    margin-top: 5px;
     text-align: center;
+}
+
+.section-result__container {
+    padding-bottom: 10px;
 }
 
 .tag__link {
@@ -454,6 +457,37 @@ input {
     color: var(--color-red-contrast);
 }
 
+.reaction-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.like, .dislike {
+    width: 35px;
+    height: 35px;
+    background-size: contain;
+    background-position: 0;
+    background-repeat: no-repeat;
+}
+
+.like--active {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20id%3D%22Capa_1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%2050%2050%22%20style%3D%22enable-background%3Anew%200%200%2050%2050%3B%22%20xml%3Aspace%3D%22preserve%22%3E%0A%3Cpath%20style%3D%22fill%3A%23D75A4A%3B%22%20d%3D%22M24.85%2C10.126c2.018-4.783%2C6.628-8.125%2C11.99-8.125c7.223%2C0%2C12.425%2C6.179%2C13.079%2C13.543%20%20c0%2C0%2C0.353%2C1.828-0.424%2C5.119c-1.058%2C4.482-3.545%2C8.464-6.898%2C11.503L24.85%2C48L7.402%2C32.165c-3.353-3.038-5.84-7.021-6.898-11.503%20%20c-0.777-3.291-0.424-5.119-0.424-5.119C0.734%2C8.179%2C5.936%2C2%2C13.159%2C2C18.522%2C2%2C22.832%2C5.343%2C24.85%2C10.126z%22%2F%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+}
+
+.dislike--active {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20id%3D%22Capa_1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%2050%2050%22%20style%3D%22enable-background%3Anew%200%200%2050%2050%3B%22%20xml%3Aspace%3D%22preserve%22%3E%0A%3Cpath%20d%3D%22M7.402%2C32.471c-3.353-3.038-5.84-7.021-6.898-11.503c-0.777-3.291-0.424-5.119-0.424-5.119%20%20C0.734%2C8.485%2C5.936%2C2.306%2C13.159%2C2.306c4.51%2C0%2C8.271%2C2.369%2C10.555%2C5.966l-0.02-0.013L16.26%2C19.16l14.487%2C1.932L19.355%2C31.535%20%20l8.447%2C5.279l-3.626%2C10.879L7.402%2C32.471z%20M49.496%2C20.97c-1.058%2C4.482-3.545%2C8.464-6.898%2C11.502L26.6%2C46.745l3.597-10.792%20%20l-7.553-4.721l12.608-11.557L19.74%2C17.608l5.362-7.864c0.051-0.037%2C0.1-0.079%2C0.132-0.143c2.181-4.334%2C6.56-7.294%2C11.606-7.294%20%20c7.223%2C0%2C12.425%2C6.179%2C13.079%2C13.543C49.92%2C15.85%2C50.273%2C17.679%2C49.496%2C20.97z%22%20fill%3D%22%23D75A4A%22%2F%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+}
+
+.like--normal {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20id%3D%22Capa_1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%2050%2050%22%20style%3D%22enable-background%3Anew%200%200%2050%2050%3B%22%20xml%3Aspace%3D%22preserve%22%3E%0A%3Cpath%20style%3D%22fill%3A%23d1c3ea%3B%22%20d%3D%22M24.85%2C10.126c2.018-4.783%2C6.628-8.125%2C11.99-8.125c7.223%2C0%2C12.425%2C6.179%2C13.079%2C13.543%20%20c0%2C0%2C0.353%2C1.828-0.424%2C5.119c-1.058%2C4.482-3.545%2C8.464-6.898%2C11.503L24.85%2C48L7.402%2C32.165c-3.353-3.038-5.84-7.021-6.898-11.503%20%20c-0.777-3.291-0.424-5.119-0.424-5.119C0.734%2C8.179%2C5.936%2C2%2C13.159%2C2C18.522%2C2%2C22.832%2C5.343%2C24.85%2C10.126z%22%2F%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+}
+
+.dislike--normal {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20id%3D%22Capa_1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%2050%2050%22%20style%3D%22enable-background%3Anew%200%200%2050%2050%3B%22%20xml%3Aspace%3D%22preserve%22%3E%0A%3Cpath%20d%3D%22M7.402%2C32.471c-3.353-3.038-5.84-7.021-6.898-11.503c-0.777-3.291-0.424-5.119-0.424-5.119%20%20C0.734%2C8.485%2C5.936%2C2.306%2C13.159%2C2.306c4.51%2C0%2C8.271%2C2.369%2C10.555%2C5.966l-0.02-0.013L16.26%2C19.16l14.487%2C1.932L19.355%2C31.535%20%20l8.447%2C5.279l-3.626%2C10.879L7.402%2C32.471z%20M49.496%2C20.97c-1.058%2C4.482-3.545%2C8.464-6.898%2C11.502L26.6%2C46.745l3.597-10.792%20%20l-7.553-4.721l12.608-11.557L19.74%2C17.608l5.362-7.864c0.051-0.037%2C0.1-0.079%2C0.132-0.143c2.181-4.334%2C6.56-7.294%2C11.606-7.294%20%20c7.223%2C0%2C12.425%2C6.179%2C13.079%2C13.543C49.92%2C15.85%2C50.273%2C17.679%2C49.496%2C20.97z%22%20fill%3D%22%23d1c3ea%22%2F%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+}
+
 /* Media sections */
 @media only screen and (max-width: 860px) {
     .tag {
@@ -469,6 +503,7 @@ input {
         margin: 25px 0;
         position: absolute;
         margin-top: 173px;
+        max-width: 100%;
     }
 
     .section-result__icon {
@@ -477,11 +512,17 @@ input {
     }
 
     .tag__section-result {
+        display: flex;
+        justify-content: space-evenly;
         height: 100px;
         background-position: center;
         order: -1;
         margin-top: 20px;
     }
+
+    .reaction-container--left {
+        order: -1;
+    }   
 
     .search {
         padding-bottom: 10px;
