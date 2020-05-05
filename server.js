@@ -218,7 +218,7 @@ queryRouter.get('/include', (req, res) => {
     const { user } = req.session;
     const tips = [];
     const { parent, child, like, dislike, unlike, undislike } = req.query;
-    
+    let votes = null;
     const parentFormatted = parent.toLowerCase();
     const childFormatted = child.toLowerCase();
     
@@ -227,17 +227,18 @@ queryRouter.get('/include', (req, res) => {
     if (!parentTag || !childTag) return res.redirect('/');
     const url = `?parent=${parentFormatted}&child=${childFormatted}`;
 
-    if (typeof like !== 'undefined') {
-        likeManager.like(user, parentFormatted, childFormatted);
-    } else if (typeof dislike !== 'undefined') {
-        likeManager.dislike(user, parentFormatted, childFormatted);
-    } else if (typeof unlike !== 'undefined') {
-        likeManager.delLike(user, parentFormatted, childFormatted);
-    } else if (typeof undislike !== 'undefined') {
-        likeManager.delDislike(user, parentFormatted, childFormatted);
+    if (user) {
+        if (typeof like !== 'undefined') {
+            likeManager.like(user, parentFormatted, childFormatted);
+        } else if (typeof dislike !== 'undefined') {
+            likeManager.dislike(user, parentFormatted, childFormatted);
+        } else if (typeof unlike !== 'undefined') {
+            likeManager.delLike(user, parentFormatted, childFormatted);
+        } else if (typeof undislike !== 'undefined') {
+            likeManager.delDislike(user, parentFormatted, childFormatted);
+        }
+        votes = likeManager.votes(user, parentFormatted, childFormatted);
     }
-
-    const votes = likeManager.votes(user, parentFormatted, childFormatted);
 
     const result = canInclude(childTag, parentTag, childFormatted, parentFormatted);
     const pairKey = `${childFormatted}|${parentFormatted}|${result.type}`.toLowerCase();
