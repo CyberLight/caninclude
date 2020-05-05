@@ -83,8 +83,97 @@ class Counter {
     }
 }
 
+class LikeManager {
+    constructor() {
+        this.likesStore = {};
+        this.dislikesStore = {};
+    }
+
+    votes(user, parent, child) {
+        const key = `${parent}:${child}`;
+        this.likesStore[key] = this.likesStore[key] || {};
+        this.dislikesStore[key] = this.dislikesStore[key] || {};
+        const liked = this.likesStore[key][user];
+        const disliked = this.dislikesStore[key][user];
+        return {
+            likes: shortenNumber(this.likes(parent, child) || 0),
+            dislikes: shortenNumber(this.dislikes(parent, child) || 0),
+            disliked,
+            liked
+        };
+    }
+
+    likes(parent, child) {
+        const key = `${parent}:${child}`;
+        return this.likesStore[key].counter;
+    }
+
+    dislikes(parent, child) {
+        const key = `${parent}:${child}`;
+        return this.dislikesStore[key].counter;
+    }
+
+    like(user, parent, child) {
+        const key = `${parent}:${child}`;
+        this.likesStore[key] = this.likesStore[key] || {};
+        if (!this.likesStore[key][user]) {
+            this.likesStore[key][user] = 1;
+            this.likesStore[key].counter = (this.likesStore[key].counter || 0)  + 1;
+            this.delDislike(user, parent, child);
+        }
+    }
+
+    dislike(user, parent, child) {
+        const key = `${parent}:${child}`;
+        this.dislikesStore[key] = this.dislikesStore[key] || {};
+        if (!this.dislikesStore[key][user]) {
+            this.dislikesStore[key][user] = 1;
+            this.dislikesStore[key].counter = (this.dislikesStore[key].counter || 0) + 1;
+            this.delLike(user, parent, child);
+        }
+    }
+
+    delDislike(user, parent, child) {
+        const key = `${parent}:${child}`;
+        this.dislikesStore[key] = this.dislikesStore[key] || {};
+        if (this.dislikesStore[key][user]) {
+            this.dislikesStore[key].counter = (this.dislikesStore[key].counter || 0) - 1;
+            delete this.dislikesStore[key][user];
+        }
+    }
+
+    delLike(user, parent, child) {
+        const key = `${parent}:${child}`;
+        this.likesStore[key] = this.likesStore[key] || {};
+        if (this.likesStore[key][user]) {
+            this.likesStore[key].counter = (this.likesStore[key].counter || 0) - 1;
+            delete this.likesStore[key][user];
+        }
+    }
+
+    store() {
+        return Promise.all([
+            writeFile('./votes/likes.json', JSON.stringify(this.likesStore)),
+            writeFile('./votes/dislikes.json', JSON.stringify(this.dislikesStore))
+        ]);
+    }
+
+    load() {
+        return Promise.all([
+            readFile('./votes/likes.json'),
+            readFile('./votes/dislikes.json')
+        ]).then(([likes, dislikes]) => {
+            this.likesStore = JSON.parse(likes);
+            this.dislikesStore = JSON.parse(dislikes);
+        }).catch(() => {
+            this.likesStore = {};
+            this.dislikesStore = {};
+        });
+    }
+}
+
 function shortenNumber(n, d) {
-    if (n < 1) return "<1";
+    if (n < 1) return "0";
     var k = n = Math.floor(n);
     if (n < 1000) return (n.toString().split("."))[0];
     if (d !== 0) d = d || 1;
@@ -108,3 +197,4 @@ function shortenNumber(n, d) {
 module.exports.Scheduler = Scheduler;
 module.exports.Counter = Counter;
 module.exports.shortenNumber = shortenNumber;
+module.exports.LikeManager = LikeManager;
