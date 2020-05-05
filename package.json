@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "crawl": "node crawl",
+    "crawl": "node crawl && node specfix",
     "start": "node server",
     "dev": "nodemon ./server.js",
     "glitch:pack": "node ./scripts/glitch",
