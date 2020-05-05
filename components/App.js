@@ -8,9 +8,10 @@ const Footer = require('./Footer');
 const Tips = require('./Tips');
 const About = require('./About');
 const QuickResults = require('./QuickResults');
+const CookieConsent = require('./CookieConsent');
 
 class App extends Component {
-    render({ form, tags, tips = [], tagStats, request, specVersion, votes }) {
+    render({ form, tags, tips = [], tagStats, request, specVersion, votes, userAcceptCookie }) {
         const hasTags = tags.length > 0;
 
         return html`
@@ -21,6 +22,7 @@ class App extends Component {
                     <div class="marker__content">Alpha<br/>version</div>
                 </a>
             </header>
+            ${ !userAcceptCookie && html`<${CookieConsent}/>` }
             <main class="content">
                 <${Tips} tips="${tips}"/>
                 <${Tags} show="${hasTags}">
@@ -29,7 +31,7 @@ class App extends Component {
                     <input id="second" class="tab__option" type="radio" name="tabs" value="second"/>
                     <label class="tab__name" for="second">${tags.length && tags[2].tags.list.map(item => `<${item}/>`).join(', ')}</label>
                     <${Section} tag="${tags[0]}" accent="first"/>
-                    <${ResultSection} ..."${tags[1]}" request="${request}" votes="${votes}"/>
+                    <${ResultSection} ..."${tags[1]}" request="${request}" votes="${votes}" userAcceptCookie="${userAcceptCookie}"/>
                     <${Section} tag="${tags[2]}" accent="last"/>
                 </${Tags}>
                 <${About} show="${!hasTags}">
