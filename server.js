@@ -14,7 +14,7 @@ const renderToString = require('preact-render-to-string');
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 const app = express();
-const scheduler = new Scheduler(1000 * 10);
+const scheduler = new Scheduler(1000 * 60 * 10);
 const counter = new Counter();
 const likeManager = new LikeManager();
 
@@ -237,8 +237,9 @@ queryRouter.get('/include', (req, res) => {
         } else if (typeof undislike !== 'undefined') {
             likeManager.delDislike(user, parentFormatted, childFormatted);
         }
-        votes = likeManager.votes(user, parentFormatted, childFormatted);
     }
+
+    votes = likeManager.votes(user, parentFormatted, childFormatted);
 
     const result = canInclude(childTag, parentTag, childFormatted, parentFormatted);
     const pairKey = `${childFormatted}|${parentFormatted}|${result.type}`.toLowerCase();
