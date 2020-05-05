@@ -203,6 +203,16 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
     return { unknown: true, matched: [] };
 }
 
+const cookieRouter = express.Router();
+cookieRouter.get('/accept', (req, res) => {
+    if (!req.session.user) {
+        const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        req.session.user = `${uuidv4()}${clientIp}`;
+        req.session.userAcceptCookie = true;
+        res.redirect(req.header('Referer') || '/');
+    }
+});
+
 const queryRouter = express.Router();
 queryRouter.get('/include', (req, res) => {
     const { user } = req.session;
@@ -253,7 +263,8 @@ queryRouter.get('/include', (req, res) => {
             url
         },
         specVersion,
-        votes
+        votes,
+        userAcceptCookie: req.session.userAcceptCookie 
     };
 
     streamBody(req, res, props, css);
@@ -287,14 +298,7 @@ app.use(cookieSession({
 
 app.all('*', checkHttps);
 app.use(countRquests);
-app.use(function(req, res, next) {
-    if (!req.session.user) {
-        const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        req.session.user = `${uuidv4()}${clientIp}`;
-        req.session.userAcceptCookie = false;
-    }
-    next();
-});
+
 app.get('/', (req, res) => {
     const props = { 
         form: { parent: '', child: '' }, 
@@ -307,7 +311,8 @@ app.get('/', (req, res) => {
             count: counter.count,
             uniqCount: counter.uniqCount
         },
-        specVersion
+        specVersion,
+        userAcceptCookie: req.session.userAcceptCookie 
     };
     streamBody(req, res, props, css);
 });
@@ -315,6 +320,7 @@ app.get('/', (req, res) => {
 app.use(express.urlencoded({ extended: true }))
 app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/can', queryRouter);
+app.use('/cookies', cookieRouter);
 
 app.listen(port, async () => {
     console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
