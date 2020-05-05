@@ -13,7 +13,7 @@ const writeFile = util.promisify(fs.writeFile);
         const conditionalKeywords = [];
 
         for (const obj of section) {
-            const resultNegative = obj.textContent.split(/(\b(no|not)\b)/);
+            const resultNegative = obj.textContent.split(/(\b(no)\b)/);
             if (resultNegative.length > 1) {
                 let prevPart = '';
                 for (const part of resultNegative) {
