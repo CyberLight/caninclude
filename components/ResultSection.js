@@ -32,7 +32,7 @@ class ResultSection extends Component {
                 <div class="section-result__icon ${this.getIconClass(props)}"></div>
                 <div class="section-result__text">${props.text}</div>
             </div>
-            ${ userAcceptCookie && html`
+            ${ userAcceptCookie && votes && html`
             <div class="reaction-container reaction-container--left">
                 <a class="like like--${votes.liked ? 'active' : 'normal'}" href="${props.request.url}&${votes.liked ? 'unlike' : 'like' }"></a>
                 <span>${votes.likes}</span>
