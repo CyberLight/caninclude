@@ -25,14 +25,12 @@ class ResultSection extends Component {
 
     render(props) {
         const votes = props.votes;
-        const userAcceptCookie = props.userAcceptCookie;
         return html`
         <section class="tag__section-result ${this.getSectionClass(props)}">
             <div class="section-result__container">
                 <div class="section-result__icon ${this.getIconClass(props)}"></div>
                 <div class="section-result__text">${props.text}</div>
             </div>
-            ${ userAcceptCookie && votes && html`
             <div class="reaction-container reaction-container--left">
                 <a class="like like--${votes.liked ? 'active' : 'normal'}" href="${props.request.url}&${votes.liked ? 'unlike' : 'like' }"></a>
                 <span>${votes.likes}</span>
@@ -40,7 +38,7 @@ class ResultSection extends Component {
             <div class="reaction-container">
                 <a class="dislike dislike--${votes.disliked ? 'active' : 'normal'}" href="${props.request.url}&${votes.disliked ? 'undislike' : 'dislike'}"></a>
                 <span>${votes.dislikes}</span>
-            </div>`}
+            </div>
         </section>`;
     }
 }
