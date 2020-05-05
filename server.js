@@ -170,7 +170,7 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
     });
 
     const hasNegativeKeywords = new Set(negativeKeywords.filter(x => childKeyWordsSet.has(x)));
-    if (hasNegativeKeywords.has(childFormatted)) {
+    if (hasNegativeKeywords.has(childFormatted) || hasNegativeKeywords.size) {
         return { type: 'No', fail: true, text: 'No, you can\'t!' };
     }
 
