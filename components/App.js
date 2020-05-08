@@ -14,7 +14,7 @@ const TagFeedbacks = require('./TagFeedbacks');
 const Main = require('./Main');
 
 class App extends Component {
-    render({ form, tags, tips = [], tagStats, request, specVersion, votes, userAcceptCookie, showFeedback, showFeedbacks, feedback, feedbacks }) {
+    render({ form, tags, tips = [], tagStats, request, specVersion, votes, userAcceptCookie, showFeedback, showFeedbacks, feedback, feedbacks, canAddFeedback }) {
         const hasTags = tags.length > 0;
 
         return html`
@@ -30,7 +30,7 @@ class App extends Component {
                         <input id="second" class="tab__option" type="radio" name="tabs" value="second"/>
                         <label class="tab__name" for="second">${tags.length && tags[2].tags.list.map(item => `<${item}/>`).join(', ')}</label>
                         <${Section} tag="${tags[0]}" accent="first"/>
-                        <${ResultSection} ..."${tags[1]}" request="${request}" votes="${votes}" feedback="${feedback}" userAcceptCookie="${userAcceptCookie}"/>
+                        <${ResultSection} ..."${tags[1]}" request="${request}" votes="${votes}" feedback="${feedback}" userAcceptCookie="${userAcceptCookie}" canAddFeedback="${canAddFeedback}"/>
                         <${Section} tag="${tags[2]}" accent="last"/>
                     </${Tags}>
                     <${About} show="${!hasTags}">
