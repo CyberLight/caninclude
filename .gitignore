@@ -123,4 +123,7 @@ counters/*
 votes/*
 !votes/.keep
 
+.data/*
+!.data/.keep
+
 .DS_Store
