@@ -6,7 +6,7 @@ class SearchForm extends Component {
         <section class="search">
             <form id="search" autocomplete="off" class="search__form" action="/can/include/" method="get">
                 <label class="head" for="child"><a class="head__link--regular" href="/">Can I include</a></label>
-                <input autofocus type="text" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
+                <input type="text" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
                 <span class="divider">to</span>
                 <input type="text" id="parent" name="parent" autocomplete="off" placeholder="Parent tag name" value="${parent.toLowerCase()}"/>
                 <button class="search__button search__button--accent" type="submit">?</button>
