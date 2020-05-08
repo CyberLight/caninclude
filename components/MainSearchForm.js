@@ -9,7 +9,7 @@ class MainSearchForm extends Component {
                 <label class="head head--big" for="child"><${ColorText}>Can I Include*</${ColorText}></label>
                 <p class="search__spec-version"><span class="head head--small">Based on HTML spec | Last Updated ${specVersion}</span></p><br/>
                 <div class="search__container">
-                    <input type="text" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
+                    <input autofocus type="text" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
                     <label class="divider">to</label>
                     <input type="text" id="parent" name="parent" autocomplete="off" placeholder="Parent tag name" value="${parent.toLowerCase()}"/>
                     <button class="search__button search__button--accent" type="submit">?</button>
