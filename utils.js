@@ -3,6 +3,8 @@ const fs = require('fs');
 const util = require('util');
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
+const sqlite3 = require("sqlite3").verbose();
+const md5 = require('md5');
 
 class Scheduler {
     constructor(trackPeriodInMs = 2 * 1000 * 60) {
@@ -99,7 +101,8 @@ class LikeManager {
             likes: shortenNumber(this.likes(parent, child) || 0),
             dislikes: shortenNumber(this.dislikes(parent, child) || 0),
             disliked,
-            liked
+            liked,
+            user
         };
     }
 
@@ -194,7 +197,116 @@ function shortenNumber(n, d) {
     k = n / 1e3; if (k >= 1) return shorten(k, d, "K");
 }
 
+class DbManager {
+    constructor(dbFile = "./.data/sqlite.db") {
+        this.dbFile = dbFile;
+        this.database = new sqlite3.Database(dbFile);
+    }
+
+    setup() {
+        this.runOneByOne(() => {
+            this.database.run('PRAGMA journal_mode = WAL;');
+            this.database.run(`
+                CREATE TABLE IF NOT EXISTS feedbacks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user TEXT NOT NULL,
+                    text TEXT NOT NULL CHECK (length(text) >= 1 AND length(text) <= 280),
+                    key TEXT NOT NULL,
+                    parent TEXT NOT NULL,
+                    child TEXT NOT NULL,
+                    resolved INTEGER NO NULL DEFAULT 0 CHECK (resolved = 0 OR resolved = 1),
+                    approved INTEGER NO NULL DEFAULT 0 CHECK (resolved = 0 OR resolved = 1),
+                    created TEXT NOT NULL DEFAULT(datetime('now')),
+                    UNIQUE(key)
+                );
+            `);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_user_parent_child ON feedbacks(user, parent, child);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_resolved ON feedbacks(resolved);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_approved ON feedbacks(approved);`);
+        });
+    }
+
+    get db() {
+        return this.database;
+    }
+
+    runOneByOne(cb) {
+        this.db.serialize(cb);
+    }
+}
+
+class FeedbackManager extends DbManager {
+    constructor(dbFile) {
+        super(dbFile);
+    }
+
+    countByTags({ parent, child }) {
+        return new Promise((resolve, reject) => {
+            this.db.get(
+                `SELECT COUNT(id) as count 
+                FROM feedbacks WHERE 
+                parent=? AND 
+                child=?;`,
+                [parent, child],
+                (err, row) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(shortenNumber(row.count));
+                }
+            );
+        });
+        
+    }
+
+    countAll() {
+        return new Promise((resolve, reject) => {
+            this.db.get(`SELECT COUNT(id) as count FROM feedbacks;`, [], (err, row) => {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(shortenNumber(row.count));
+            });
+        });
+    }
+
+    add({ user, text, parent, child }) {
+        return new Promise((resolve, reject) => {
+            const pairKey = `${parent}:${child}`;
+            const key = md5(`${user}:${text}:${pairKey}`);
+
+            this.db.run(`INSERT INTO feedbacks (user, key, parent, child, text) VALUES (?,?,?,?,?);`, [user, key, parent, child, text], function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(this.changes);
+            });
+        });
+    }
+
+    getLastFeedbacks({ user, parent, child }) {
+        return new Promise((resolve, reject) => {
+            this.db.all(`
+            SELECT * FROM feedbacks WHERE 
+            user=? AND 
+            parent=? AND 
+            child=? 
+            ORDER BY created DESC
+            LIMIT 10`,
+                [user, parent, child],
+                function (err, rows) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(rows);
+                }
+            );
+        });
+    }
+}
+
 module.exports.Scheduler = Scheduler;
 module.exports.Counter = Counter;
 module.exports.shortenNumber = shortenNumber;
 module.exports.LikeManager = LikeManager;
+module.exports.FeedbackManager = FeedbackManager;
