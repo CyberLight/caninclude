@@ -25,9 +25,9 @@ class TagFeedbacks extends Component {
                     ${ feedbacks.map(feedback => html`
                         <tr class="table__row">
                             <td class="table__col--wrap ${ feedback.approved ? '' : 'blurry-text' }">${this.getText(feedback)}</td>
-                            <td class="table__col--center">${ request.user === feedback.user ? 'Yes' : 'No' }</td>
-                            <td class="table__col--center">${feedback.resolved ? 'Yes' : 'No' }</td>
-                            <td class="table__col--center">${feedback.approved ? 'Yes' : 'No' }</td>
+                            <td class="table__col--center"><div class="feedback-icon ${request.user === feedback.user ? 'feedback-icon--your' : ''}"></div></td>
+                            <td class="table__col--center"><div class="feedback-icon feedback-icon--${ feedback.resolved ? 'resolved' : 'wait' }"></div></td>
+                            <td class="table__col--center"><div class="feedback-icon feedback-icon--${ feedback.approved ? 'approved' : 'wait' }"></div></td>
                         </tr>`)}
                 </table>
             </div> 
