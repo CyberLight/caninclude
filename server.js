@@ -7,9 +7,10 @@ const { v4: uuidv4 } = require('uuid');
 const CleanCSS = require('clean-css');
 const { html } = require('htm/preact');
 const { Readable } = require('stream');
-const { Scheduler, Counter, shortenNumber, LikeManager } = require('./utils');
-
+const { Scheduler, Counter, shortenNumber, LikeManager, FeedbackManager } = require('./utils');
+const url = require('url');
 const App = require('./components/App');
+const ErrorPage = require('./components/ErrorPage');
 const renderToString = require('preact-render-to-string');
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
@@ -17,6 +18,8 @@ const app = express();
 const scheduler = new Scheduler(1000 * 60 * 10);
 const counter = new Counter();
 const likeManager = new LikeManager();
+const feedbackManager = new FeedbackManager("./.data/sqlite.db");
+feedbackManager.setup();
 
 const port = process.env.PORT || 3000;
 const messages = {
@@ -33,6 +36,17 @@ const messages = {
         return `The parent tag <b>&lt;${parentFormatted}/&gt;</b> with the <b>Content model</b> section and the child tag <b>&lt;${childFormatted}/&gt;</b> with the <b>Categories</b> section have matches: ${matched.map(match => markMatched(match))}`;
     }
 };
+
+const ErrorsCollection = {
+    DuplicateFeedbackMessage: 'Error: Duplicate feedback message for the current tag pair from you'
+}
+
+function getMessageByError(e) {
+    if (~e.message.indexOf('feedbacks.key') && ~e.message.indexOf('UNIQUE constraint failed')) {
+        return 'DuplicateFeedbackMessage'
+    }
+    throw e;
+}
 
 let searchStatMap = makeSortedMap();
 let db = null;
@@ -131,6 +145,32 @@ function streamBody(req, res, props = {}, css) {
     </html>`, res);
 } 
 
+function streamPage(req, res, htmlObj, css) {
+    const body = renderToString(htmlObj);
+    const { styles } = new CleanCSS().minify(css);
+    sendContent(`
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta property="og:title" content="Can I Include">
+            <meta property="og:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
+            <meta property="og:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
+            <meta property="og:url" content="https://caninclude.glitch.me/">
+            <meta name="twitter:card" content="summary_large_image">
+            <meta property="og:site_name" content="Can I Include">
+
+            <meta name="twitter:title" content="Can I Include">
+            <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
+            <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
+            <meta name="twitter:image:alt" content="Can I Include [main page]">
+            <style>${styles}</style>
+        </head>
+        <body>${body}</body>
+    </html>`, res);
+} 
+
 function createSetOfKeyWords(tag, categoryName, forceAddTagName = false) {
     const keyWordSet = tag.props[categoryName].reduce((o, item) => {
         for (const keyWord of item.keywords) {
@@ -203,21 +243,58 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
     return { unknown: true, matched: [] };
 }
 
+function withCatch(cb) {
+    return async function (req, res, next) {
+        try {
+            await cb(req, res, next);
+        } catch (e) {
+            console.warn('CATCHED:', e, typeof e, e.message, Object.keys(e));
+            return next(e);
+        }
+    }
+}
+
+const feedbackRouter = express.Router();
+feedbackRouter.post('/new', withCatch(async (req, res, next) => {
+    const { feedback, parent, child } = req.body;
+    const currentUrl = req.header('Referer') || '/';
+    const parentFormatted = parent.toLowerCase();
+    const childFormatted = child.toLowerCase();
+    if (!db[parentFormatted] || !db[childFormatted]) return res.redirect(currentUrl.href);
+
+    const { user } = req.session;
+    if (user) {
+        try {
+            await feedbackManager.add({ user, text: feedback, parent: parentFormatted, child: childFormatted });
+        } catch (e) {
+            req.session.messageKey = getMessageByError(e);
+            return res.redirect(currentUrl);
+        }
+    }   
+
+    const parsedUrl = url.parse(currentUrl, true);
+    const searchParams = new URLSearchParams(parsedUrl.query);
+    searchParams.delete('feedback');
+    parsedUrl.search = searchParams.toString();
+    res.redirect(url.format(parsedUrl));
+}));
+
+
 const cookieRouter = express.Router();
 cookieRouter.get('/accept', (req, res) => {
     if (!req.session.user) {
         const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        req.session.user = `${uuidv4()}${clientIp}`;
+        req.session.user = `${uuidv4()}${clientIp.split(',')[0]}`;
         req.session.userAcceptCookie = true;
         res.redirect(req.header('Referer') || '/');
     }
 });
 
 const queryRouter = express.Router();
-queryRouter.get('/include', (req, res) => {
+queryRouter.get('/include', withCatch(async (req, res) => {
     const { user } = req.session;
     const tips = [];
-    const { parent, child, like, dislike, unlike, undislike } = req.query;
+    const { parent, child, like, dislike, unlike, undislike, feedback, feedbacks } = req.query;
     let votes = null;
     const parentFormatted = parent.toLowerCase();
     const childFormatted = child.toLowerCase();
@@ -225,7 +302,7 @@ queryRouter.get('/include', (req, res) => {
     const parentTag = db[parentFormatted];
     const childTag = db[childFormatted];
     if (!parentTag || !childTag) return res.redirect('/');
-    const url = `?parent=${parentFormatted}&child=${childFormatted}`;
+    const currentUrl = `?parent=${parentFormatted}&child=${childFormatted}`;
 
     if (user) {
         if (typeof like !== 'undefined') {
@@ -255,6 +332,17 @@ queryRouter.get('/include', (req, res) => {
         ], type: 'info' });
     }
 
+    const messageKey = req.session.messageKey;
+    if (messageKey) {
+        delete req.session.messageKey;
+        tips.push({ 
+            messages: [ErrorsCollection[messageKey]], 
+            type: 'error'
+        });
+    }
+
+    const queryParams = { user, parent: parentFormatted, child: childFormatted };
+
     const props = { 
         form: { parent: parentFormatted, result, child: childFormatted }, 
         tags: [ childTag, result, parentTag ],
@@ -262,15 +350,22 @@ queryRouter.get('/include', (req, res) => {
         request: {
             count: counter.count,
             uniqCount: counter.uniqCount,
-            url
+            url: currentUrl,
+            user
         },
         specVersion,
         votes,
-        userAcceptCookie: req.session.userAcceptCookie 
+        userAcceptCookie: req.session.userAcceptCookie,
+        showFeedback: typeof feedback !== 'undefined',
+        showFeedbacks: typeof feedbacks !== 'undefined',
+        feedback: { 
+            count: await feedbackManager.countByTags(queryParams),
+        },
+        feedbacks: await feedbackManager.getLastFeedbacks(queryParams)
     };
 
     streamBody(req, res, props, css);
-});
+}));
 
 function checkHttps(req, res, next) {
     if (!req.get('X-Forwarded-Proto') || req.get('X-Forwarded-Proto').indexOf("https") != -1) {
@@ -300,8 +395,16 @@ app.use(cookieSession({
 
 app.all('*', checkHttps);
 app.use(countRquests);
+app.use(withCatch(function (req, res, next) {
+    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const onlyClientIp = clientIp.split(',')[0];
+    if (req.session.user && clientIp && (req.session.user.endsWith(clientIp) || req.session.user.endsWith(onlyClientIp))) {
+        req.session.user = req.session.user.replace(clientIp, '').replace(onlyClientIp, '');
+    }
+    next();
+}));
 
-app.get('/', (req, res) => {
+app.get('/', withCatch((req, res) => {
     const props = { 
         form: { parent: '', child: '' }, 
         tags: [],
@@ -314,15 +417,43 @@ app.get('/', (req, res) => {
             uniqCount: counter.uniqCount
         },
         specVersion,
-        userAcceptCookie: req.session.userAcceptCookie 
+        userAcceptCookie: req.session.userAcceptCookie,
+        showFeedback: undefined,
+        showFeedbacks: undefined
     };
     streamBody(req, res, props, css);
-});
+}));
 
 app.use(express.urlencoded({ extended: true }))
 app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/can', queryRouter);
 app.use('/cookies', cookieRouter);
+app.use('/feedback', feedbackRouter);
+app.use(async function logErrors(err, req, res, next) {
+    console.error(err.stack);
+    next(err);
+});
+app.use(async function clientErrorHandler(err, req, res, next) {
+    if (req.xhr) {
+        res.status(500).send({ error: 'Something failed!' });
+    } else {
+        next(err);
+    }
+});
+app.use(async function errorHandler(err, req, res, next) {
+    if (!err) {
+        return next();
+    }
+    res.status(500);
+    const refererUrl = req.header('Referer') || '/';
+    const request = {
+        count: counter.count,
+        uniqCount: counter.uniqCount,
+        url: refererUrl
+    };
+
+    streamPage(req, res, html`<${ErrorPage} request="${request}"/>`, css);
+});
 
 app.listen(port, async () => {
     console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
