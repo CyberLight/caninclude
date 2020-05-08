@@ -12,8 +12,11 @@ const url = require('url');
 const App = require('./components/App');
 const ErrorPage = require('./components/ErrorPage');
 const renderToString = require('preact-render-to-string');
+const { check, validationResult } = require('express-validator');
+
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
+const FeedbackDailyLimit = process.env.FEEDBACK_DAILY_LIMIT || 0;
 const app = express();
 const scheduler = new Scheduler(1000 * 60 * 10);
 const counter = new Counter();
@@ -38,12 +41,20 @@ const messages = {
 };
 
 const ErrorsCollection = {
-    DuplicateFeedbackMessage: 'Error: Duplicate feedback message for the current tag pair from you'
+    DuplicateFeedbackMessage: 'Error: Duplicate feedback message for the current tag pair from you',
+    FeedbackLimitExceeded: 'Error: The daily limit for sending feedback text has been reached.',
+    ConstraintsViolation: 'Error: One of the data restrictions is violated.'
 }
 
 function getMessageByError(e) {
     if (~e.message.indexOf('feedbacks.key') && ~e.message.indexOf('UNIQUE constraint failed')) {
-        return 'DuplicateFeedbackMessage'
+        return 'DuplicateFeedbackMessage';
+    }
+    if (~e.message.indexOf('FEEDBACK limit exceeded')) {
+        return 'FeedbackLimitExceeded';
+    }
+    if (e.message.endsWith('feedbacks') && ~e.message.indexOf('CHECK constraint failed')) {
+        return 'ConstraintsViolation';
     }
     throw e;
 }
@@ -248,24 +259,36 @@ function withCatch(cb) {
         try {
             await cb(req, res, next);
         } catch (e) {
-            console.warn('CATCHED:', e, typeof e, e.message, Object.keys(e));
             return next(e);
         }
     }
 }
 
 const feedbackRouter = express.Router();
-feedbackRouter.post('/new', withCatch(async (req, res, next) => {
+feedbackRouter.post('/new', [
+    check('feedback').isLength({ min: 10, max: 280 }),
+    check('parent').isLength({ min: 1 }),
+    check('child').isLength({ min: 1 })
+], withCatch(async (req, res, next) => {
     const { feedback, parent, child } = req.body;
     const currentUrl = req.header('Referer') || '/';
     const parentFormatted = parent.toLowerCase();
     const childFormatted = child.toLowerCase();
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        return res.redirect(currentUrl.href);
+    }
+
     if (!db[parentFormatted] || !db[childFormatted]) return res.redirect(currentUrl.href);
 
     const { user } = req.session;
     if (user) {
         try {
-            await feedbackManager.add({ user, text: feedback, parent: parentFormatted, child: childFormatted });
+            const canAdd = await feedbackManager.canAddFeedback(FeedbackDailyLimit);
+            if (canAdd) {
+                await feedbackManager.add({ user, text: feedback, parent: parentFormatted, child: childFormatted });
+            }
         } catch (e) {
             req.session.messageKey = getMessageByError(e);
             return res.redirect(currentUrl);
@@ -291,7 +314,15 @@ cookieRouter.get('/accept', (req, res) => {
 });
 
 const queryRouter = express.Router();
-queryRouter.get('/include', withCatch(async (req, res) => {
+queryRouter.get('/include', [
+    check('parent').isLength({ min: 1 }),
+    check('child').isLength({ min: 1 })
+], withCatch(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.redirect('/');
+    }
+
     const { user } = req.session;
     const tips = [];
     const { parent, child, like, dislike, unlike, undislike, feedback, feedbacks } = req.query;
@@ -341,6 +372,13 @@ queryRouter.get('/include', withCatch(async (req, res) => {
         });
     }
 
+    let canAddFeedback = true;
+    try {
+        await feedbackManager.canAddFeedback(FeedbackDailyLimit);
+    } catch(e) {
+        canAddFeedback = false;
+    }
+
     const queryParams = { user, parent: parentFormatted, child: childFormatted };
 
     const props = { 
@@ -356,12 +394,13 @@ queryRouter.get('/include', withCatch(async (req, res) => {
         specVersion,
         votes,
         userAcceptCookie: req.session.userAcceptCookie,
-        showFeedback: typeof feedback !== 'undefined',
+        showFeedback: typeof feedback !== 'undefined' && canAddFeedback,
         showFeedbacks: typeof feedbacks !== 'undefined',
         feedback: { 
             count: await feedbackManager.countByTags(queryParams),
         },
-        feedbacks: await feedbackManager.getLastFeedbacks(queryParams)
+        feedbacks: await feedbackManager.getLastFeedbacks(queryParams),
+        canAddFeedback
     };
 
     streamBody(req, res, props, css);
@@ -375,7 +414,7 @@ function checkHttps(req, res, next) {
     }
 }
 
-function countRquests(req, res, next) {
+function countRequests(req, res, next) {
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     req.ip = ip;
     const { like, dislike, unlike, undislike } = req.query;
@@ -394,7 +433,7 @@ app.use(cookieSession({
 }));
 
 app.all('*', checkHttps);
-app.use(countRquests);
+app.use(countRequests);
 app.use(withCatch(function (req, res, next) {
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const onlyClientIp = clientIp.split(',')[0];
