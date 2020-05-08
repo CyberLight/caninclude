@@ -235,9 +235,34 @@ class DbManager {
     }
 }
 
+class DailyFeedbackExceededError extends Error {
+    constructor() {
+        super('FEEDBACK limit exceeded');
+    }
+}
+
 class FeedbackManager extends DbManager {
     constructor(dbFile) {
         super(dbFile);
+    }
+
+    canAddFeedback(limit=5) {
+        return new Promise((resolve, reject) => {
+            if (limit === 0) reject(new DailyFeedbackExceededError());
+            this.db.get(
+                `SELECT COUNT(id) as count FROM feedbacks WHERE date(created)=?`, 
+                [new Date().toISOString().substring(0, 10)], 
+                (err, row) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    if (row.count < limit) {
+                        resolve(true);
+                    } else {
+                        reject(new DailyFeedbackExceededError());
+                    }
+                });
+        });
     }
 
     countByTags({ parent, child }) {
@@ -256,7 +281,6 @@ class FeedbackManager extends DbManager {
                 }
             );
         });
-        
     }
 
     countAll() {
