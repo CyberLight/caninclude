@@ -39,10 +39,12 @@ class ResultSection extends Component {
                 <a class="dislike dislike--${votes.disliked ? 'active' : 'normal'}" href="${props.request.url}&${votes.disliked ? 'undislike' : 'dislike'}"></a>
                 <span>${votes.dislikes}</span>
             </div>
+            ${ props.canAddFeedback && html`
             <div class="reaction-container">
                 <a class="feedback feedback--${votes.user ? 'active' : 'normal'}" href="${props.request.url}&feedback" title="New feedback"></a>
                 <span>new</span>
-            </div>
+            </div>` 
+            }
             <div class="reaction-container">
                 <a class="feedbacks feedbacks--${votes.user ? 'active' : 'normal'}" href="${props.request.url}&feedbacks" title="List of feedbacks"></a>
                 <span>list [${props.feedback.count}]</span>
