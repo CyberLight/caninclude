@@ -282,6 +282,12 @@ class FeedbackManager extends DbManager {
     }
 }
 
+class RecordNotFoundError extends Error {
+    constructor(message) {
+        super(message || 'Record not found');
+    }
+}
+
 class LikesManager extends DbManager {
     getCount(parent, child, type='like') {
         return new Promise((resolve, reject) => {
@@ -300,21 +306,31 @@ class LikesManager extends DbManager {
                 if (err) {
                     return reject(err);
                 }
+                if (!row) {
+                    return reject(new RecordNotFoundError());
+                }
                 resolve(row);
             });
         });
     }
 
+    async getLikeSafe(user, parent, child, defaultValue = {}) { 
+        try {
+            return await this.getLike(user, parent, child);
+        } catch(e) {
+            if (typeof e === RecordNotFoundError) {
+                return defaultValue;
+            }
+        }
+    }
+
     createLike(user, parent, child, type='like') {
         return new Promise((resolve, reject) => {
-            this.db.get(`INSERT INTO likes(user, parent, child, type) VALUES(?,?,?,?)`, [user, parent, child, type], function (err, row) {
+            this.db.run(`INSERT INTO likes(user, parent, child, type) VALUES(?,?,?,?)`, [user, parent, child, type], function (err) {
                 if (err) {
                     return reject(err);
                 }
-                if (!row) {
-                    return reject(new Error('Like not found'));
-                }
-                resolve(row.id);
+                resolve(this.lastID);
             });
         });
     }
@@ -354,7 +370,7 @@ class LikesManager extends DbManager {
     async votes(user, parent, child) {
         const likes = await this.getCount(parent, child, 'like');
         const dislikes = await this.getCount(parent, child, 'dislike');
-        const like = await this.getLike(user, parent, child);
+        const like = await this.getLikeSafe(user, parent, child, { type: 'unknown' });
         return {
             likes: shortenNumber(likes),
             dislikes: shortenNumber(dislikes),
