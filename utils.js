@@ -85,96 +85,6 @@ class Counter {
     }
 }
 
-class LikeManager {
-    constructor() {
-        this.likesStore = {};
-        this.dislikesStore = {};
-    }
-
-    votes(user, parent, child) {
-        const key = `${parent}:${child}`;
-        this.likesStore[key] = this.likesStore[key] || {};
-        this.dislikesStore[key] = this.dislikesStore[key] || {};
-        const liked = this.likesStore[key][user];
-        const disliked = this.dislikesStore[key][user];
-        return {
-            likes: shortenNumber(this.likes(parent, child) || 0),
-            dislikes: shortenNumber(this.dislikes(parent, child) || 0),
-            disliked,
-            liked,
-            user
-        };
-    }
-
-    likes(parent, child) {
-        const key = `${parent}:${child}`;
-        return this.likesStore[key].counter;
-    }
-
-    dislikes(parent, child) {
-        const key = `${parent}:${child}`;
-        return this.dislikesStore[key].counter;
-    }
-
-    like(user, parent, child) {
-        const key = `${parent}:${child}`;
-        this.likesStore[key] = this.likesStore[key] || {};
-        if (!this.likesStore[key][user]) {
-            this.likesStore[key][user] = 1;
-            this.likesStore[key].counter = (this.likesStore[key].counter || 0)  + 1;
-            this.delDislike(user, parent, child);
-        }
-    }
-
-    dislike(user, parent, child) {
-        const key = `${parent}:${child}`;
-        this.dislikesStore[key] = this.dislikesStore[key] || {};
-        if (!this.dislikesStore[key][user]) {
-            this.dislikesStore[key][user] = 1;
-            this.dislikesStore[key].counter = (this.dislikesStore[key].counter || 0) + 1;
-            this.delLike(user, parent, child);
-        }
-    }
-
-    delDislike(user, parent, child) {
-        const key = `${parent}:${child}`;
-        this.dislikesStore[key] = this.dislikesStore[key] || {};
-        if (this.dislikesStore[key][user]) {
-            this.dislikesStore[key].counter = (this.dislikesStore[key].counter || 0) - 1;
-            delete this.dislikesStore[key][user];
-        }
-    }
-
-    delLike(user, parent, child) {
-        const key = `${parent}:${child}`;
-        this.likesStore[key] = this.likesStore[key] || {};
-        if (this.likesStore[key][user]) {
-            this.likesStore[key].counter = (this.likesStore[key].counter || 0) - 1;
-            delete this.likesStore[key][user];
-        }
-    }
-
-    store() {
-        return Promise.all([
-            writeFile('./votes/likes.json', JSON.stringify(this.likesStore)),
-            writeFile('./votes/dislikes.json', JSON.stringify(this.dislikesStore))
-        ]);
-    }
-
-    load() {
-        return Promise.all([
-            readFile('./votes/likes.json'),
-            readFile('./votes/dislikes.json')
-        ]).then(([likes, dislikes]) => {
-            this.likesStore = JSON.parse(likes);
-            this.dislikesStore = JSON.parse(dislikes);
-        }).catch(() => {
-            this.likesStore = {};
-            this.dislikesStore = {};
-        });
-    }
-}
-
 function shortenNumber(n, d) {
     if (n < 1) return "0";
     var k = n = Math.floor(n);
@@ -197,15 +107,16 @@ function shortenNumber(n, d) {
     k = n / 1e3; if (k >= 1) return shorten(k, d, "K");
 }
 
-class DbManager {
+class DbConnection {
     constructor(dbFile = "./.data/sqlite.db") {
         this.dbFile = dbFile;
         this.database = new sqlite3.Database(dbFile);
     }
 
     setup() {
-        this.runOneByOne(() => {
+        this.database.serialize(() => {
             this.database.run('PRAGMA journal_mode = WAL;');
+            // this.database.run('PRAGMA recursive_triggers=1;');
             this.database.run(`
                 CREATE TABLE IF NOT EXISTS feedbacks (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -217,21 +128,63 @@ class DbManager {
                     resolved INTEGER NO NULL DEFAULT 0 CHECK (resolved = 0 OR resolved = 1),
                     approved INTEGER NO NULL DEFAULT 0 CHECK (resolved = 0 OR resolved = 1),
                     created TEXT NOT NULL DEFAULT(datetime('now')),
+                    updatedAt TEXT NOT NULL DEFAULT(datetime('now')),
                     UNIQUE(key)
                 );
             `);
-            this.database.run(`CREATE INDEX IF NOT EXISTS idx_user_parent_child ON feedbacks(user, parent, child);`);
-            this.database.run(`CREATE INDEX IF NOT EXISTS idx_resolved ON feedbacks(resolved);`);
-            this.database.run(`CREATE INDEX IF NOT EXISTS idx_approved ON feedbacks(approved);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_feedbacks_user_parent_child ON feedbacks(user, parent, child);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_feedbacks_resolved ON feedbacks(resolved);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_feedbacks_approved ON feedbacks(approved);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_feedbacks_created ON feedbacks(created);`);
+
+            this.database.run(`
+                CREATE TRIGGER IF NOT EXISTS [trg_feedbacks_updatedAt]
+                    AFTER UPDATE
+                    ON feedbacks
+                BEGIN
+                    UPDATE feedbacks SET updatedAt=datetime('now') WHERE id=OLD.id;
+                END;
+            `);
+
+            this.database.run(`
+                CREATE TABLE IF NOT EXISTS likes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user TEXT NOT NULL,
+                    parent TEXT NOT NULL,
+                    child TEXT NOT NULL,
+                    type TEXT NOT NULL DEFAULT('like') CHECK (type = 'like' OR type = 'dislike' OR type = 'unknown'),
+                    created TEXT NOT NULL DEFAULT(datetime('now')),
+                    updatedAt TEXT NOT NULL DEFAULT(datetime('now')),
+                    UNIQUE(user, parent, child)
+                );
+            `);
+
+            this.database.run(`
+                CREATE TRIGGER IF NOT EXISTS [trg_likes_updatedAt]
+                    AFTER UPDATE
+                    ON likes
+                BEGIN
+                    UPDATE likes SET updatedAt=datetime('now') WHERE id=OLD.id;
+                END;
+            `);
+
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_likes_parent_child ON likes(parent, child);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_likes_created ON likes(created);`);
         });
+    }
+}
+
+class DbManager {
+    constructor(conn) {
+        this.conn = conn;
     }
 
     get db() {
-        return this.database;
+        return this.conn.database;
     }
 
     runOneByOne(cb) {
-        this.db.serialize(cb);
+        this.conn.database.serialize(cb);
     }
 }
 
@@ -329,8 +282,92 @@ class FeedbackManager extends DbManager {
     }
 }
 
+class LikesManager extends DbManager {
+    getCount(parent, child, type='like') {
+        return new Promise((resolve, reject) => {
+            this.db.get(`SELECT COUNT(id) as count FROM likes WHERE parent=? AND child=? AND type=?`, [parent, child, type], function (err, row) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(row && row.count || 0);
+            });
+        });
+    }
+
+    getLike(user, parent, child) {
+        return new Promise((resolve, reject) => {
+            this.db.get(`SELECT id, type FROM likes WHERE user=? AND parent=? AND child=?`, [user, parent, child], function (err, row) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(row);
+            });
+        });
+    }
+
+    createLike(user, parent, child, type='like') {
+        return new Promise((resolve, reject) => {
+            this.db.get(`INSERT INTO likes(user, parent, child, type) VALUES(?,?,?,?)`, [user, parent, child, type], function (err, row) {
+                if (err) {
+                    return reject(err);
+                }
+                if (!row) {
+                    return reject(new Error('Like not found'));
+                }
+                resolve(row.id);
+            });
+        });
+    }
+
+    updateLike(id, type = 'like') {
+        return new Promise((resolve, reject) => {
+            this.db.get(`UPDATE likes SET type=? WHERE id=?`, [type, id], function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(this.changes);
+            });
+        });
+    }
+
+    async like(user, parent, child, type='like') {
+        try {
+            const { id } = await this.getLike(user, parent, child);
+            await this.updateLike(id, type);
+        } catch (e) {
+            await this.createLike(user, parent, child, type);
+        }
+    }
+
+    async unlike(user, parent, child) {
+        return this.like(user, parent, child, 'unknown');
+    }
+
+    async dislike(user, parent, child) {
+        return this.like(user, parent, child, 'dislike');
+    }
+
+    async undislike(user, parent, child) {
+        return this.like(user, parent, child, 'unknown');
+    }
+
+    async votes(user, parent, child) {
+        const likes = await this.getCount(parent, child, 'like');
+        const dislikes = await this.getCount(parent, child, 'dislike');
+        const like = await this.getLike(user, parent, child);
+        return {
+            likes: shortenNumber(likes),
+            dislikes: shortenNumber(dislikes),
+            disliked: like && like.type === 'dislike' || false,
+            liked: like && like.type === 'like' || false,
+            user
+        };
+    }
+}
+
 module.exports.Scheduler = Scheduler;
 module.exports.Counter = Counter;
 module.exports.shortenNumber = shortenNumber;
-module.exports.LikeManager = LikeManager;
 module.exports.FeedbackManager = FeedbackManager;
+module.exports.LikesManager = LikesManager;
+module.exports.DbConnection = DbConnection;
