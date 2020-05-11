@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const CleanCSS = require('clean-css');
 const { html } = require('htm/preact');
 const { Readable } = require('stream');
-const { Scheduler, Counter, shortenNumber, LikeManager, FeedbackManager } = require('./utils');
+const { Scheduler, Counter, shortenNumber, LikesManager, DbConnection, FeedbackManager } = require('./utils');
 const url = require('url');
 const App = require('./components/App');
 const ErrorPage = require('./components/ErrorPage');
@@ -16,13 +16,17 @@ const { check, validationResult } = require('express-validator');
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
-const FeedbackDailyLimit = process.env.FEEDBACK_DAILY_LIMIT || 0;
+const FeedbackDailyLimit = process.env.FEEDBACK_DAILY_LIMIT || 10;
 const app = express();
 const scheduler = new Scheduler(1000 * 60 * 10);
 const counter = new Counter();
-const likeManager = new LikeManager();
-const feedbackManager = new FeedbackManager("./.data/sqlite.db");
-feedbackManager.setup();
+
+const dbConnection = new DbConnection("./.data/sqlite.db");
+dbConnection.setup();
+
+const likeManager = new LikesManager(dbConnection);
+const feedbackManager = new FeedbackManager(dbConnection);
+
 
 const port = process.env.PORT || 3000;
 const messages = {
@@ -69,7 +73,6 @@ scheduler.schedule(async function () {
     const content = JSON.stringify([...searchStatMap]);
     await writeFile('./searchstat.json', content);
     await counter.store();
-    await likeManager.store();
     this.emit('next');
 });
 
@@ -337,17 +340,17 @@ queryRouter.get('/include', [
 
     if (user) {
         if (typeof like !== 'undefined') {
-            likeManager.like(user, parentFormatted, childFormatted);
+            await likeManager.like(user, parentFormatted, childFormatted);
         } else if (typeof dislike !== 'undefined') {
-            likeManager.dislike(user, parentFormatted, childFormatted);
+            await likeManager.dislike(user, parentFormatted, childFormatted);
         } else if (typeof unlike !== 'undefined') {
-            likeManager.delLike(user, parentFormatted, childFormatted);
+            await likeManager.unlike(user, parentFormatted, childFormatted);
         } else if (typeof undislike !== 'undefined') {
-            likeManager.delDislike(user, parentFormatted, childFormatted);
+            await likeManager.undislike(user, parentFormatted, childFormatted);
         }
     }
 
-    votes = likeManager.votes(user, parentFormatted, childFormatted);
+    votes = await likeManager.votes(user, parentFormatted, childFormatted);
 
     const result = canInclude(childTag, parentTag, childFormatted, parentFormatted);
     const pairKey = `${childFormatted}|${parentFormatted}|${result.type}`.toLowerCase();
@@ -508,6 +511,5 @@ app.listen(port, async () => {
     searchStatMap = makeSortedMap(JSON.parse(searchStat));
     counter.load().catch(e => console.warn(e.message));
     console.warn('[i] End of reading searchstat.json');
-    await likeManager.load();
     console.log(`Example app listening at http://localhost:${port}`);
 });
