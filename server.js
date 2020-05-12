@@ -19,14 +19,14 @@ const writeFile = util.promisify(fs.writeFile);
 const FeedbackDailyLimit = process.env.FEEDBACK_DAILY_LIMIT || 10;
 const app = express();
 const scheduler = new Scheduler(1000 * 60 * 10);
-const counter = new Counter();
+
 
 const dbConnection = new DbConnection("./.data/sqlite.db");
 dbConnection.setup();
 
 const likeManager = new LikesManager(dbConnection);
 const feedbackManager = new FeedbackManager(dbConnection);
-
+const counter = new Counter(dbConnection);
 
 const port = process.env.PORT || 3000;
 const messages = {
@@ -72,7 +72,6 @@ scheduler.start();
 scheduler.schedule(async function () {
     const content = JSON.stringify([...searchStatMap]);
     await writeFile('./searchstat.json', content);
-    await counter.store();
     this.emit('next');
 });
 
@@ -337,6 +336,7 @@ queryRouter.get('/include', [
     const childTag = db[childFormatted];
     if (!parentTag || !childTag) return res.redirect('/');
     const currentUrl = `?parent=${parentFormatted}&child=${childFormatted}`;
+    await counter.load();
 
     if (user) {
         if (typeof like !== 'undefined') {
@@ -417,12 +417,12 @@ function checkHttps(req, res, next) {
     }
 }
 
-function countRequests(req, res, next) {
+async function countRequests(req, res, next) {
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     req.ip = ip;
     const { like, dislike, unlike, undislike } = req.query;
     if ([like, dislike, unlike, undislike].some(x => typeof x !== 'undefined')) return next();
-    counter.register(ip.split(',')[0]);
+    await counter.register(ip.split(',')[0]);
     next();
 }
 
@@ -446,7 +446,8 @@ app.use(withCatch(function (req, res, next) {
     next();
 }));
 
-app.get('/', withCatch((req, res) => {
+app.get('/', withCatch(async (req, res) => {
+    await counter.load();
     const props = { 
         form: { parent: '', child: '' }, 
         tags: [],
@@ -498,18 +499,22 @@ app.use(async function errorHandler(err, req, res, next) {
 });
 
 app.listen(port, async () => {
-    console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
-    console.warn('[i] Begin read database');
-    const jsonDb = await readFile('./spec.json');
-    css = await readFile('./components/App.css', { encoding: 'utf8' });
-    const parsedDb = JSON.parse(jsonDb);
-    specVersion = parsedDb.version;
-    db = makeIndex(parsedDb);
-    console.warn('[i] End of reading database');
-    console.warn('[i] Begin read searchstat.json');
-    const searchStat = await readFile('./searchstat.json');
-    searchStatMap = makeSortedMap(JSON.parse(searchStat));
-    counter.load().catch(e => console.warn(e.message));
-    console.warn('[i] End of reading searchstat.json');
-    console.log(`Example app listening at http://localhost:${port}`);
+    try {
+        console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
+        console.warn('[i] Begin read database');
+        const jsonDb = await readFile('./spec.json');
+        css = await readFile('./components/App.css', { encoding: 'utf8' });
+        const parsedDb = JSON.parse(jsonDb);
+        specVersion = parsedDb.version;
+        db = makeIndex(parsedDb);
+        console.warn('[i] End of reading database');
+        console.warn('[i] Begin read searchstat.json');
+        const searchStat = await readFile('./searchstat.json');
+        searchStatMap = makeSortedMap(JSON.parse(searchStat));
+        await counter.load();
+        console.warn('[i] End of reading searchstat.json');
+        console.log(`Example app listening at http://localhost:${port}`);
+    } catch (e) {
+        console.warn(e.message);
+    }
 });
