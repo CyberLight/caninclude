@@ -1,8 +1,4 @@
 const events = require('events');
-const fs = require('fs');
-const util = require('util');
-const writeFile = util.promisify(fs.writeFile);
-const readFile = util.promisify(fs.readFile);
 const sqlite3 = require("sqlite3").verbose();
 const md5 = require('md5');
 
@@ -26,62 +22,6 @@ class Scheduler {
             () => this.emitter.emit('perform'),
             this.trackPeriodInMs
         );
-    }
-}
-
-class Counter {
-    constructor() {
-        this.data = {};
-        this.totalCount = 0;
-        this.currentDate = new Date().toJSON().slice(0, 10);
-        this.currentCounterPath = `./counters/count${this.currentDate}.json`;
-        this.previousCurrentDate = this.currentDate;
-        this.uniqTotalCount = 0;
-    }
-
-    get count() {
-        return this.totalCount;
-    }
-
-    get uniqCount() {
-        return this.uniqTotalCount;
-    }
-
-    reset() {
-        this.data = {};
-        this.totalCount = 0;
-        this.uniqTotalCount = 0;
-    }
-
-    async register(ip) {
-        const date = new Date().toJSON().slice(0, 10);
-
-        if (this.previousCurrentDate !== date) {
-            await this.store();
-            this.reset();
-        }
-
-        this.currentDate = date;
-        this.currentCounterPath = `./counters/count${this.currentDate}.json`;
-        const key = `${ip}|${this.currentDate}`;
-        const prevCount = this.data[key] || 0;
-        if (!prevCount) { this.uniqTotalCount += 1; }
-        this.data[key] = prevCount + 1;
-        this.totalCount += 1;
-        this.previousCurrentDate = this.currentDate;
-    }
-
-    store() {
-        return writeFile(this.currentCounterPath, JSON.stringify(this.data));
-    }
-
-    load() {
-        return readFile(this.currentCounterPath).then(data => {
-            this.data = JSON.parse(data);
-            const values = Object.values(this.data);
-            this.totalCount = values.reduce((sum, value) => sum + value, 0);
-            this.uniqTotalCount = values.length;
-        });
     }
 }
 
@@ -170,6 +110,26 @@ class DbConnection {
 
             this.database.run(`CREATE INDEX IF NOT EXISTS idx_likes_parent_child ON likes(parent, child);`);
             this.database.run(`CREATE INDEX IF NOT EXISTS idx_likes_created ON likes(created);`);
+
+            this.database.run(`
+                CREATE TABLE IF NOT EXISTS counters (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    key TEXT NOT NULL,
+                    count INTEGER NOT NULL DEFAULT(0),
+                    created TEXT NOT NULL DEFAULT(date('now')),
+                    updatedAt TEXT NOT NULL DEFAULT(datetime('now')),
+                    UNIQUE(key, created)
+                );
+            `);
+
+            this.database.run(`
+                CREATE TRIGGER IF NOT EXISTS [trg_counters_updatedAt]
+                    AFTER UPDATE
+                    ON counters
+                BEGIN
+                    UPDATE counters SET updatedAt=datetime('now') WHERE id=OLD.id;
+                END;
+            `);
         });
     }
 }
@@ -195,10 +155,6 @@ class DailyFeedbackExceededError extends Error {
 }
 
 class FeedbackManager extends DbManager {
-    constructor(dbFile) {
-        super(dbFile);
-    }
-
     canAddFeedback(limit=5) {
         return new Promise((resolve, reject) => {
             if (limit === 0) reject(new DailyFeedbackExceededError());
@@ -378,6 +334,102 @@ class LikesManager extends DbManager {
             liked: like && like.type === 'like' || false,
             user
         };
+    }
+}
+
+class Counter extends DbManager {
+    constructor(dbConn) {
+        super(dbConn);
+        this.totalCount = 0;
+        this.uniqTotalCount = 0;
+    }
+
+    get count() {
+        return this.totalCount;
+    }
+
+    get uniqCount() {
+        return this.uniqTotalCount;
+    }
+
+    async getBy({ key, date }) {
+        return new Promise((resolve, reject) => {
+            this.db.get(
+                'SELECT key, count FROM counters WHERE key=? AND created=?', 
+                [key, date.toISOString().slice(0,10)], 
+                function (err, row) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    if (!row) {
+                        return reject(new RecordNotFoundError());
+                    }
+                    resolve(row);
+                });
+        });
+    }
+
+    async create({ key }) {
+        return new Promise((resolve, reject) => {
+            this.db.run('INSERT INTO counters(key, count) VALUES(?,?)', [key, 1], function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(this.lastID);
+            });
+        });
+    }
+
+    async update({ key }) {
+        return new Promise((resolve, reject) => {
+            this.db.run(
+                'UPDATE counters SET count=count+1 WHERE key=? AND date(created)=?', 
+                [
+                    key, 
+                    new Date().toISOString().slice(0, 10)
+                ], 
+                function (err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(this.lastID);
+                });
+        });
+    }
+
+    async getTotals() {
+        return new Promise((resolve, reject) => {
+            this.db.get(
+                'SELECT COUNT(id) as uniqCount, SUM(count) as totalCount FROM counters WHERE created=? GROUP BY date(created)',
+                [new Date().toISOString().slice(0, 10)],
+                function (err, row) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    if (!row) {
+                        resolve({ uniqCount: 0, totalCount: 0 });
+                    }
+                    resolve(row);
+                });
+        });
+    }
+
+    async register(ip) {
+        const key = md5(ip);
+        try {
+            const record = await this.getBy({ key, date: new Date() });
+            await this.update({ key: record.key });
+        } catch (e) {
+            if (e instanceof RecordNotFoundError) {
+                await this.create({ key });
+            }
+        }
+    }
+
+    async load() {
+        const result = await this.getTotals();
+        this.totalCount = result && result.totalCount || 0;
+        this.uniqTotalCount = result && result.uniqCount || 0;
     }
 }
 
