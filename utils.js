@@ -156,6 +156,7 @@ class DbConnection {
             this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_created ON history(created);`);
             this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_count ON history(count);`);
             this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_child_parent_created ON history(child, parent, created);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_updatedAt ON history(updatedAt);`);
         });
     }
 }
@@ -480,7 +481,7 @@ class HistoryManager extends DbManager {
     async getLastBy() {
         return new Promise((resolve, reject) => {
             this.db.all(
-                `SELECT id, parent, child, canInclude, count FROM history ORDER BY count DESC LIMIT 10`,
+                `SELECT id, parent, child, canInclude, count FROM history ORDER BY updatedAt DESC LIMIT 10`,
                 [],
                 function (err, rows) {
                     if (err) {
@@ -494,7 +495,7 @@ class HistoryManager extends DbManager {
     async create({ parent, child, canInclude}) {
         return new Promise((resolve, reject) => {
             this.db.run(
-                'INSERT INTO history(parent, child, canInclude) VALUES(?,?,?)', 
+                'INSERT INTO history(parent, child, canInclude, count) VALUES(?,?,?,1)', 
                 [parent, child, canInclude.toLowerCase()], 
                 function (err) {
                     if (err) {
