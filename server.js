@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const CleanCSS = require('clean-css');
 const { html } = require('htm/preact');
 const { Readable } = require('stream');
-const { Scheduler, Counter, shortenNumber, LikesManager, DbConnection, FeedbackManager } = require('./utils');
+const { Scheduler, Counter, shortenNumber, LikesManager, DbConnection, FeedbackManager, HistoryManager } = require('./utils');
 const url = require('url');
 const App = require('./components/App');
 const ErrorPage = require('./components/ErrorPage');
@@ -27,6 +27,7 @@ dbConnection.setup();
 const likeManager = new LikesManager(dbConnection);
 const feedbackManager = new FeedbackManager(dbConnection);
 const counter = new Counter(dbConnection);
+const historyManager = new HistoryManager(dbConnection);
 
 const port = process.env.PORT || 3000;
 const messages = {
@@ -63,7 +64,6 @@ function getMessageByError(e) {
     throw e;
 }
 
-let searchStatMap = makeSortedMap();
 let db = null;
 let css = '';
 let specVersion = '';
@@ -134,7 +134,6 @@ function sendContent(content, res) {
 
 function streamBody(req, res, props = {}, css) {
     const body = renderToString(html`<${App} ...${props}/>`);
-    const { styles } = new CleanCSS().minify(css);
     sendContent(`
     <!DOCTYPE html>
     <html>
@@ -152,7 +151,7 @@ function streamBody(req, res, props = {}, css) {
             <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
             <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
             <meta name="twitter:image:alt" content="Can I Include [main page]">
-            <style>${styles}</style>
+            <style>${css}</style>
         </head>
         <body>${body}</body>
     </html>`, res);
@@ -160,7 +159,6 @@ function streamBody(req, res, props = {}, css) {
 
 function streamPage(req, res, htmlObj, css) {
     const body = renderToString(htmlObj);
-    const { styles } = new CleanCSS().minify(css);
     sendContent(`
     <!DOCTYPE html>
     <html>
@@ -178,7 +176,7 @@ function streamPage(req, res, htmlObj, css) {
             <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
             <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
             <meta name="twitter:image:alt" content="Can I Include [main page]">
-            <style>${styles}</style>
+            <style>${css}</style>
         </head>
         <body>${body}</body>
     </html>`, res);
@@ -198,14 +196,6 @@ function createSetOfKeyWords(tag, categoryName, forceAddTagName = false) {
         }
     }
     return keyWordSet;
-}
-
-function updateSearchStatMap(pairKey) {
-    searchStatMap.set(pairKey, (searchStatMap.get(pairKey) || 0) + 1);
-    const ItemsCount = 10;
-    if (searchStatMap.size > ItemsCount) {
-        searchStatMap = makeSortedMap([...searchStatMap].slice(-1 * ItemsCount));
-    }
 }
 
 function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
@@ -353,8 +343,11 @@ queryRouter.get('/include', [
     votes = await likeManager.votes(user, parentFormatted, childFormatted);
 
     const result = canInclude(childTag, parentTag, childFormatted, parentFormatted);
-    const pairKey = `${childFormatted}|${parentFormatted}|${result.type}`.toLowerCase();
-    updateSearchStatMap(pairKey);
+    await historyManager.register({ 
+        parent: parentFormatted, 
+        child: childFormatted, 
+        canInclude: result.type 
+    })
 
     if (result.doubt) {
         tips.push({ messages: [result.message], type: 'warning' });
@@ -448,13 +441,11 @@ app.use(withCatch(function (req, res, next) {
 
 app.get('/', withCatch(async (req, res) => {
     await counter.load();
+    const tagStats = await historyManager.getLastBy();
     const props = { 
         form: { parent: '', child: '' }, 
         tags: [],
-        tagStats: [...searchStatMap].map(([result, count]) => {
-            const [child, parent, canInclude] = result.split('|');
-            return { child, parent, canInclude, count: shortenNumber(count) };
-        }),
+        tagStats,
         request: {
             count: counter.count,
             uniqCount: counter.uniqCount
@@ -504,13 +495,13 @@ app.listen(port, async () => {
         console.warn('[i] Begin read database');
         const jsonDb = await readFile('./spec.json');
         css = await readFile('./components/App.css', { encoding: 'utf8' });
+        const { styles } = new CleanCSS().minify(css);
+        css = styles;
         const parsedDb = JSON.parse(jsonDb);
         specVersion = parsedDb.version;
         db = makeIndex(parsedDb);
         console.warn('[i] End of reading database');
         console.warn('[i] Begin read searchstat.json');
-        const searchStat = await readFile('./searchstat.json');
-        searchStatMap = makeSortedMap(JSON.parse(searchStat));
         await counter.load();
         console.warn('[i] End of reading searchstat.json');
         console.log(`Example app listening at http://localhost:${port}`);
