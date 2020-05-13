@@ -130,6 +130,32 @@ class DbConnection {
                     UPDATE counters SET updatedAt=datetime('now') WHERE id=OLD.id;
                 END;
             `);
+
+            this.database.run(`
+                CREATE TABLE IF NOT EXISTS history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    child TEXT NOT NULL,
+                    parent TEXT NOT NULL,
+                    canInclude INTEGER NOT NULL DEFAULT('no') CHECK (canInclude = 'yes' OR canInclude = 'no' OR canInclude = 'doubt'),
+                    count INTEGER NOT NULL DEFAULT(0),
+                    created TEXT NOT NULL DEFAULT(date('now')),
+                    updatedAt TEXT NOT NULL DEFAULT(datetime('now')),
+                    UNIQUE(child, parent, canInclude, created)
+                );
+            `);
+
+            this.database.run(`
+                CREATE TRIGGER IF NOT EXISTS [trg_history_updatedAt]
+                    AFTER UPDATE
+                    ON history
+                BEGIN
+                    UPDATE history SET updatedAt=datetime('now') WHERE id=OLD.id;
+                END;
+            `);
+
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_created ON history(created);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_count ON history(count);`);
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_child_parent_created ON history(child, parent, created);`);
         });
     }
 }
@@ -383,7 +409,7 @@ class Counter extends DbManager {
     async update({ key }) {
         return new Promise((resolve, reject) => {
             this.db.run(
-                'UPDATE counters SET count=count+1 WHERE key=? AND date(created)=?', 
+                'UPDATE counters SET count=count+1 WHERE key=? AND created=?', 
                 [
                     key, 
                     new Date().toISOString().slice(0, 10)
@@ -433,9 +459,87 @@ class Counter extends DbManager {
     }
 }
 
+class HistoryManager extends DbManager {
+    async getBy({ parent, child, date }) {
+        return new Promise((resolve, reject) => {
+            this.db.get(
+                'SELECT id, parent, child, canInclude FROM history WHERE parent=? AND child=? AND created=?',
+                [parent, child, date.toISOString().slice(0, 10)],
+                function (err, row) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    if (!row) {
+                        return reject(new RecordNotFoundError());
+                    }
+                    resolve(row);
+                });
+        });
+    }
+
+    async getLastBy() {
+        return new Promise((resolve, reject) => {
+            this.db.all(
+                `SELECT id, parent, child, canInclude, count FROM history ORDER BY count DESC LIMIT 10`,
+                [],
+                function (err, rows) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(rows);
+                });
+        });
+    }
+
+    async create({ parent, child, canInclude}) {
+        return new Promise((resolve, reject) => {
+            this.db.run(
+                'INSERT INTO history(parent, child, canInclude) VALUES(?,?,?)', 
+                [parent, child, canInclude.toLowerCase()], 
+                function (err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(this.lastID);
+                });
+        });
+    }
+
+    async updateCountBy({ parent, child, date }) {
+        return new Promise((resolve, reject) => {
+            this.db.run(
+                'UPDATE history SET count=count+1 WHERE parent=? AND child=? AND created=?',
+                [
+                    parent,
+                    child,
+                    date.toISOString().slice(0, 10)
+                ],
+                function (err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(this.lastID);
+                });
+        });
+    }
+
+    async register({ parent, child, canInclude }) {
+        try {
+            const date = new Date();
+            const record = await this.getBy({ parent, child, date });
+            await this.updateCountBy({ parent: record.parent, child: record.child, date });
+        } catch (e) {
+            if (e instanceof RecordNotFoundError) {
+                await this.create({ parent, child, canInclude });
+            }
+        }
+    }
+}
+
 module.exports.Scheduler = Scheduler;
 module.exports.Counter = Counter;
 module.exports.shortenNumber = shortenNumber;
+module.exports.DbConnection = DbConnection;
 module.exports.FeedbackManager = FeedbackManager;
 module.exports.LikesManager = LikesManager;
-module.exports.DbConnection = DbConnection;
+module.exports.HistoryManager = HistoryManager;
