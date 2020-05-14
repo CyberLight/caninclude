@@ -1,6 +1,7 @@
 const events = require('events');
 const sqlite3 = require("sqlite3").verbose();
 const md5 = require('md5');
+const util = require('util');
 
 class Scheduler {
     constructor(trackPeriodInMs = 2 * 1000 * 60) {
@@ -164,6 +165,8 @@ class DbConnection {
 class DbManager {
     constructor(conn) {
         this.conn = conn;
+        this.getAsync = util.promisify(this.db.get).bind(this.db);
+        this.allAsync = util.promisify(this.db.all).bind(this.db);
     }
 
     get db() {
@@ -262,6 +265,15 @@ class FeedbackManager extends DbManager {
                 }
             );
         });
+    }
+
+    async getAllByPage({ page }) {
+        const row = await this.getAsync('SELECT COUNT(id) as count FROM feedbacks;', []);
+        const count = row.count;
+        const MaxPages = Math.floor(count / 10) + (count % 10 !== 0 ? 1 : 0);
+        const offset = ((page - 1) * 10) % count;
+        const rows = await this.allAsync(`SELECT * FROM feedbacks ORDER BY created DESC LIMIT 10 OFFSET ${offset};`, []);
+        return { currentPage: page, feedbacks: rows, totalPages: MaxPages };
     }
 }
 
