@@ -7,7 +7,15 @@ const { v4: uuidv4 } = require('uuid');
 const CleanCSS = require('clean-css');
 const { html } = require('htm/preact');
 const { Readable } = require('stream');
-const { Scheduler, Counter, shortenNumber, LikesManager, DbConnection, FeedbackManager, HistoryManager } = require('./utils');
+const { 
+    Counter, 
+    LikesManager, 
+    DbConnection, 
+    FeedbackManager, 
+    HistoryManager, 
+    InvitesManager, 
+    RecordNotFoundError 
+} = require('./utils');
 const url = require('url');
 const App = require('./components/App');
 const ErrorPage = require('./components/ErrorPage');
@@ -16,11 +24,8 @@ const renderToString = require('preact-render-to-string');
 const { check, validationResult } = require('express-validator');
 
 const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
-const FeedbackDailyLimit = process.env.FEEDBACK_DAILY_LIMIT || 20;
+const FeedbackDailyLimit = Number(process.env.FEEDBACK_DAILY_LIMIT || 20);
 const app = express();
-const scheduler = new Scheduler(1000 * 60 * 10);
-
 
 const dbConnection = new DbConnection("./.data/sqlite.db");
 dbConnection.setup();
@@ -29,6 +34,7 @@ const likeManager = new LikesManager(dbConnection);
 const feedbackManager = new FeedbackManager(dbConnection);
 const counter = new Counter(dbConnection);
 const historyManager = new HistoryManager(dbConnection);
+const invitesManager = new InvitesManager(dbConnection);
 
 const port = process.env.PORT || 3000;
 const messages = {
@@ -284,8 +290,7 @@ feedbackRouter.post('/new', [
 const cookieRouter = express.Router();
 cookieRouter.get('/accept', (req, res) => {
     if (!req.session.user) {
-        const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        req.session.user = `${uuidv4()}${clientIp.split(',')[0]}`;
+        req.session.user = uuidv4();
         req.session.userAcceptCookie = true;
         res.redirect(req.header('Referer') || '/');
     }
@@ -401,13 +406,13 @@ adminRouter.get('/feedbacks', async (req, res) => {
 
 adminRouter.get('/feedbacks/:id/approve', async (req, res) => {
     const currentUrl = req.header('Referer') || '/';
-    const page = await feedbackManager.approve({ id: req.params.id });
+    await feedbackManager.approve({ id: req.params.id });
     res.redirect(currentUrl);
 });
 
 adminRouter.get('/feedbacks/:id/unapprove', async (req, res) => {
     const currentUrl = req.header('Referer') || '/';
-    const page = await feedbackManager.unapprove({ id: req.params.id });
+    await feedbackManager.unapprove({ id: req.params.id });
     res.redirect(currentUrl);
 });
 
@@ -466,6 +471,34 @@ app.use(withCatch(function (req, res, next) {
     next();
 }));
 
+const inviteRouter = express.Router();
+function withRoles(...roles) {
+    const isAllowed = role => role && roles.includes(role.toLowerCase());
+    return function (req, res, next) {
+        console.warn('req.session.role', req.session.role);
+        if (req.session.user && isAllowed(req.session.role)) {
+            next();
+        } 
+        else {
+            res.redirect('/');
+        }
+    }
+}
+inviteRouter.get('/:key/apply', withCatch(async (req, res) => {
+    if (!req.session.user) return res.redirect('/');
+    const key = req.params.key;
+    try {
+        const record = await invitesManager.apply({ key, user: req.session.user });
+        req.session.role = record.role;
+        res.redirect('/');
+    } catch(e) {
+        if (e instanceof RecordNotFoundError) {
+            return res.redirect('/');
+        }
+        throw e;
+    }
+}));
+
 app.get('/', withCatch(async (req, res) => {
     await counter.load();
     const tagStats = await historyManager.getLastBy();
@@ -490,7 +523,8 @@ app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/can', queryRouter);
 app.use('/cookies', cookieRouter);
 app.use('/feedback', feedbackRouter);
-app.use('/admin', adminRouter);
+app.use('/admin', withRoles('admin'), adminRouter);
+app.use('/invites', inviteRouter);
 app.use(async function logErrors(err, req, res, next) {
     console.error(err.stack);
     next(err);
