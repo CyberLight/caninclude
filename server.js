@@ -423,6 +423,12 @@ adminRouter.get('/feedbacks/:id/unresolve', async (req, res) => {
     res.redirect(currentUrl);
 });
 
+adminRouter.get('/feedbacks/:id/remove', async (req, res) => {
+    const currentUrl = req.header('Referer') || '/';
+    const page = await feedbackManager.remove({ id: req.params.id });
+    res.redirect(currentUrl);
+});
+
 function checkHttps(req, res, next) {
     if (!req.get('X-Forwarded-Proto') || req.get('X-Forwarded-Proto').indexOf("https") != -1) {
         return next()
