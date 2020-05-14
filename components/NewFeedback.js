@@ -5,6 +5,7 @@ class NewFeedback extends Component {
         return show && html`
            <form class="feedback-form" action="/feedback/new" method="POST">
                 <textarea autofocus required minlength="10" class="feedback-form__text" id="feedback" name="feedback" cols="10" rows="3" maxlength="280" charswidth="23" placeholder="Type feedback text here..."></textarea>
+                <div class="feedback-form__tooltip">The maximum feedback length is 280 characters, like a tweet</div>
                 <input type="hidden" name="parent" value="${form.parent}"/>
                 <input type="hidden" name="child" value="${form.child}"/>
                 <div class="feedback-form__actions">
