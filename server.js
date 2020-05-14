@@ -399,6 +399,18 @@ adminRouter.get('/feedbacks', async (req, res) => {
     streamPage(req, res, html`<${AdminPage} ..."${page}" request="${request}"/>`, css);
 });
 
+adminRouter.get('/feedbacks/:id/approve', async (req, res) => {
+    const currentUrl = req.header('Referer') || '/';
+    const page = await feedbackManager.approve({ id: req.params.id });
+    res.redirect(currentUrl);
+});
+
+adminRouter.get('/feedbacks/:id/unapprove', async (req, res) => {
+    const currentUrl = req.header('Referer') || '/';
+    const page = await feedbackManager.unapprove({ id: req.params.id });
+    res.redirect(currentUrl);
+});
+
 function checkHttps(req, res, next) {
     if (!req.get('X-Forwarded-Proto') || req.get('X-Forwarded-Proto').indexOf("https") != -1) {
         return next()
