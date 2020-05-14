@@ -381,7 +381,7 @@ queryRouter.get('/include', [
         specVersion,
         votes,
         userAcceptCookie: req.session.userAcceptCookie,
-        showFeedback: typeof feedback !== 'undefined' && canAddFeedback,
+        showFeedback: typeof feedback !== 'undefined' && canAddFeedback && req.session.user,
         showFeedbacks: typeof feedbacks !== 'undefined',
         feedback: { 
             count: await feedbackManager.countByTags(queryParams),
