@@ -57,6 +57,7 @@ class DbConnection {
     setup() {
         this.database.serialize(() => {
             this.database.run('PRAGMA journal_mode = WAL;');
+            this.database.run('PRAGMA auto_vacuum = FULL;');
             // this.database.run('PRAGMA recursive_triggers=1;');
             this.database.run(`
                 CREATE TABLE IF NOT EXISTS feedbacks (
@@ -158,6 +159,30 @@ class DbConnection {
             this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_count ON history(count);`);
             this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_child_parent_created ON history(child, parent, created);`);
             this.database.run(`CREATE INDEX IF NOT EXISTS idx_history_updatedAt ON history(updatedAt);`);
+
+            this.database.run(`
+                CREATE TABLE IF NOT EXISTS invites (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    key TEXT NOT NULL,
+                    user TEXT NULL,
+                    role TEXT NOT NULL,
+                    used INTEGER NOT NULL DEFAULT(0) CHECK (used = 0 OR used = 1),
+                    created TEXT NOT NULL DEFAULT(date('now')),
+                    updatedAt TEXT NOT NULL DEFAULT(datetime('now')),
+                    UNIQUE(key, role)
+                );
+            `);
+
+            this.database.run(`CREATE INDEX IF NOT EXISTS idx_invites_used ON invites(used);`);
+
+            this.database.run(`
+                CREATE TRIGGER IF NOT EXISTS [trg_invites_updatedAt]
+                    AFTER UPDATE
+                    ON invites
+                BEGIN
+                    UPDATE invites SET updatedAt=datetime('now') WHERE id=OLD.id;
+                END;
+            `);
         });
     }
 }
@@ -290,9 +315,9 @@ class FeedbackManager extends DbManager {
 
     async getAllByPage({ page }) {
         const row = await this.getAsync('SELECT COUNT(id) as count FROM feedbacks;', []);
-        const count = row.count;
+        const count = row.count || 0;
         const MaxPages = Math.floor(count / 10) + (count % 10 !== 0 ? 1 : 0);
-        const offset = ((page - 1) * 10) % count;
+        const offset = ((page - 1) * 10) % (count || 1);
         const rows = await this.allAsync(`SELECT * FROM feedbacks ORDER BY created DESC LIMIT 10 OFFSET ${offset};`, []);
         return { currentPage: page, feedbacks: rows, totalPages: MaxPages };
     }
@@ -570,6 +595,17 @@ class HistoryManager extends DbManager {
     }
 }
 
+class InvitesManager extends DbManager {
+    async apply({ key, user }) {
+        const result = await this.getAsync(`SELECT id FROM invites WHERE key=? AND used=0`, [key]);
+        if (!result) {
+            throw new RecordNotFoundError();
+        }
+        await this.runAsync(`UPDATE invites SET user=?, used=1 WHERE key=?`, [user, key]);    
+        return this.getAsync(`SELECT * FROM invites WHERE key=? AND used=1`, [key]);
+    }
+}
+
 module.exports.Scheduler = Scheduler;
 module.exports.Counter = Counter;
 module.exports.shortenNumber = shortenNumber;
@@ -577,3 +613,5 @@ module.exports.DbConnection = DbConnection;
 module.exports.FeedbackManager = FeedbackManager;
 module.exports.LikesManager = LikesManager;
 module.exports.HistoryManager = HistoryManager;
+module.exports.InvitesManager = InvitesManager;
+module.exports.RecordNotFoundError = RecordNotFoundError;
