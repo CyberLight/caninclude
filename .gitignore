@@ -117,12 +117,6 @@ dist
 spec.json
 searchstat.json
 
-counters/*
-!counters/.keep
-
-votes/*
-!votes/.keep
-
 .data/*
 !.data/.keep
 
