@@ -167,6 +167,7 @@ class DbManager {
         this.conn = conn;
         this.getAsync = util.promisify(this.db.get).bind(this.db);
         this.allAsync = util.promisify(this.db.all).bind(this.db);
+        this.runAsync = util.promisify(this.db.run).bind(this.db);
     }
 
     get db() {
@@ -265,6 +266,14 @@ class FeedbackManager extends DbManager {
                 }
             );
         });
+    }
+
+    approve({ id }) {
+        return this.runAsync(`UPDATE feedbacks SET approved=1 WHERE id=?`, [id]);
+    }
+
+    unapprove({ id }) {
+        return this.runAsync(`UPDATE feedbacks SET approved=0 WHERE id=?`, [id]);
     }
 
     async getAllByPage({ page }) {
