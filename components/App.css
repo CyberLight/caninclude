@@ -251,11 +251,11 @@ input {
     border-left: .3rem solid var(--color-warn-border);
 }
 
-.footer__link, .table__link {
+.footer__link, .table__link, .paginate__link {
     color: var(--color-footer-link);
 }
 
-.footer__link {
+.footer__link, .paginate__link {
     text-decoration: none;
 }
 
@@ -441,6 +441,10 @@ input {
 
 .table__col--small {
     width: 10%;
+}
+
+.table__col--small-text {
+    font-size: smaller;
 }
 
 .table__row {
