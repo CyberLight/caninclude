@@ -11,12 +11,13 @@ const { Scheduler, Counter, shortenNumber, LikesManager, DbConnection, FeedbackM
 const url = require('url');
 const App = require('./components/App');
 const ErrorPage = require('./components/ErrorPage');
+const AdminPage = require('./components/AdminPage');
 const renderToString = require('preact-render-to-string');
 const { check, validationResult } = require('express-validator');
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
-const FeedbackDailyLimit = process.env.FEEDBACK_DAILY_LIMIT || 10;
+const FeedbackDailyLimit = process.env.FEEDBACK_DAILY_LIMIT || 20;
 const app = express();
 const scheduler = new Scheduler(1000 * 60 * 10);
 
@@ -67,21 +68,6 @@ function getMessageByError(e) {
 let db = null;
 let css = '';
 let specVersion = '';
-
-scheduler.start();
-scheduler.schedule(async function () {
-    const content = JSON.stringify([...searchStatMap]);
-    await writeFile('./searchstat.json', content);
-    this.emit('next');
-});
-
-function makeSortedMap(initValue = []) {
-    let map = new Map(initValue); 
-    map[Symbol.iterator] = function* () {
-        yield* [...this.entries()].sort((a, b) => b[1] - a[1]);
-    }
-    return map;
-}
 
 function copyObj(o) {
     return JSON.parse(JSON.stringify(o));
@@ -402,6 +388,17 @@ queryRouter.get('/include', [
     streamBody(req, res, props, css);
 }));
 
+const adminRouter = express.Router(); 
+adminRouter.get('/feedbacks', async (req, res) => {
+    const pageNumber = Number(req.query.page || 1);
+    const page = await feedbackManager.getAllByPage({ page: pageNumber });
+    const request = {
+        count: counter.count,
+        uniqCount: counter.uniqCount
+    };
+    streamPage(req, res, html`<${AdminPage} ..."${page}" request="${request}"/>`, css);
+});
+
 function checkHttps(req, res, next) {
     if (!req.get('X-Forwarded-Proto') || req.get('X-Forwarded-Proto').indexOf("https") != -1) {
         return next()
@@ -463,6 +460,7 @@ app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/can', queryRouter);
 app.use('/cookies', cookieRouter);
 app.use('/feedback', feedbackRouter);
+app.use('/admin', adminRouter);
 app.use(async function logErrors(err, req, res, next) {
     console.error(err.stack);
     next(err);
