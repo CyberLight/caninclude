@@ -2,7 +2,7 @@ const { html, Component } = require('htm/preact');
 
 class AdminFeedbacks extends Component {
     render({ feedbacks = [], currentPage, totalPages, show }) {
-        return show && feedbacks && feedbacks.length && html`
+        return show && html`
         <section class="feedback-container">
             <h1>Feedbacks</h1>
             <div class="feedback__table-container">
@@ -27,6 +27,7 @@ class AdminFeedbacks extends Component {
                     </tr>
                     </thead>
                     <tbody>
+                    ${ !feedbacks.length && html`<tr class="table__row"><td colspan="9" class="table__col--center">Empty</td></tr>` }
                     ${ feedbacks.map(feedback => html`
                         <tr class="table__row">
                             <td class="table__col--center">${feedback.id}</td>
