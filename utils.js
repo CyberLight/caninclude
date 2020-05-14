@@ -276,6 +276,14 @@ class FeedbackManager extends DbManager {
         return this.runAsync(`UPDATE feedbacks SET approved=0 WHERE id=?`, [id]);
     }
 
+    resolve({ id }) {
+        return this.runAsync(`UPDATE feedbacks SET resolved=1 WHERE id=?`, [id]);
+    }
+
+    unresolve({ id }) {
+        return this.runAsync(`UPDATE feedbacks SET resolved=0 WHERE id=?`, [id]);
+    }
+
     async getAllByPage({ page }) {
         const row = await this.getAsync('SELECT COUNT(id) as count FROM feedbacks;', []);
         const count = row.count;
