@@ -35,6 +35,7 @@ archive.on('error', (err) => {
 archive.pipe(output);
 
 archive.directory('components/', 'components');
+archive.directory('scripts/', 'scripts');
 archive.file('package-lock.json', { name: 'package-lock.json' });
 archive.file('package.json', { name: 'package.json' });
 archive.file('server.js', { name: 'server.js' });
