@@ -35,7 +35,7 @@ class AdminFeedbacks extends Component {
                             <td class="table__col--wrap table__col--center">${feedback.child} - ${feedback.parent}</td>
                             <td class="table__col--center">${feedback.resolved ? 'YES' : 'NO'}</td>
                             <td class="table__col--center">${feedback.approved ? 'YES' : 'NO'}</td>
-                            <td class="table__col--center"><a class="table__link" href="/admin/feedbacks/${feedback.id}/approve">Approve</a></td>
+                            <td class="table__col--center"><a class="table__link" href="${ feedback.approved ? `/admin/feedbacks/${feedback.id}/unapprove` : `/admin/feedbacks/${feedback.id}/approve`}">${feedback.approved ? 'Unapprove' : 'Approve' }</a></td>
                             <td class="table__col--center"><a class="table__link" href="/admin/feedbacks/${feedback.id}/resolve">Resolve</a></td>
                             <td class="table__col--center"><a class="table__link" href="/admin/feedbacks/${feedback.id}/remove">Remove</a></td>
                         </tr>`)
