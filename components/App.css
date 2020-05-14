@@ -615,6 +615,13 @@ input {
     justify-content: flex-end;
 }
 
+.feedback-form__tooltip {
+    left: 0;
+    right: 0;
+    padding: 0 10px;
+    background-color: var(--color-input-bg);
+}
+
 .actions__button {
     margin-top: 10px;
     color: var(--color-text);
