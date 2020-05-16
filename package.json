@@ -17,7 +17,10 @@
     "pm2:restart": "pm2 restart ecosystem.config.js --env production",
     "pm2:reload": "pm2 reload ecosystem.config.js --env production",
     "pm2:mon": "pm2 monit",
-    "pm2:kill": "pm2 kill"
+    "pm2:kill": "pm2 kill",
+    "pm2:logs": "pm2 logs webapp --lines 100",
+    "pm2:log:rotate": "pm2 install pm2-logrotate",
+    "pm2:flush": "pm2 flush"
   },
   "keywords": [],
   "author": "",
