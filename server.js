@@ -571,3 +571,15 @@ app.listen(port, async () => {
         console.warn(e.message);
     }
 });
+
+process.on('SIGINT', function () {
+    if (dbConnection) {
+        dbConnection.close().then(() => {
+            console.warn('Database connection closed successfully');
+            process.exit(0);
+        }).catch(err => { 
+            console.warn('Database connection closed with error', err);
+            process.exit(1); 
+        });
+    }
+});
