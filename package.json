@@ -11,6 +11,7 @@
     "glitch:pack": "node ./scripts/glitch",
     "glitch:unpack": "unzip -o glitch_release_*.zip -d . && rm glitch_release_*.zip && refresh",
     "glitch:apply": "refresh",
+    "glitch:wget": "node ./scripts/download",
     "gen:invite": "node ./scripts/invite --",
     "pm2:gen:config": "pm2 ecosystem",
     "pm2:stop": "pm2 stop ecosystem.config.js",
