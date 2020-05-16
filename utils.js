@@ -52,6 +52,7 @@ class DbConnection {
     constructor(dbFile = "./.data/sqlite.db") {
         this.dbFile = dbFile;
         this.database = new sqlite3.Database(dbFile);
+        this.close = util.promisify(this.database.close).bind(this.database);
     }
 
     setup() {
