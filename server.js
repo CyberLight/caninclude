@@ -312,7 +312,6 @@ queryRouter.get('/include', [
     let votes = null;
     const parentFormatted = parent.toLowerCase();
     const childFormatted = child.toLowerCase();
-    
     const parentTag = db[parentFormatted];
     const childTag = db[childFormatted];
     if (!parentTag || !childTag) return res.redirect('/');
@@ -444,8 +443,8 @@ function checkHttps(req, res, next) {
 
 async function countRequests(req, res, next) {
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    req.ip = ip;
     const { like, dislike, unlike, undislike } = req.query;
+    console.log(req.url, ip.split(',')[0], req.session.role || 'norole', req.session.user || 'anonymous');
     if ([like, dislike, unlike, undislike].some(x => typeof x !== 'undefined')) return next();
     await counter.register(ip.split(',')[0]);
     next();
@@ -475,7 +474,6 @@ const inviteRouter = express.Router();
 function withRoles(...roles) {
     const isAllowed = role => role && roles.includes(role.toLowerCase());
     return function (req, res, next) {
-        console.warn('req.session.role', req.session.role);
         if (req.session.user && isAllowed(req.session.role)) {
             next();
         } 
