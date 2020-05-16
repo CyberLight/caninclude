@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "crawl": "node crawl && node specfix",
-    "start": "npm run pm2:reload",
+    "start": "pm2 start ecosystem.config.js --env production --no-daemon",
     "dev": "nodemon ./server.js",
     "glitch:pack": "node ./scripts/glitch",
     "glitch:unpack": "unzip -o glitch_release_*.zip -d . && rm glitch_release_*.zip && refresh",
@@ -16,7 +16,8 @@
     "pm2:stop": "pm2 stop ecosystem.config.js",
     "pm2:restart": "pm2 restart ecosystem.config.js --env production",
     "pm2:reload": "pm2 reload ecosystem.config.js --env production",
-    "pm2:mon": "pm2 monit"
+    "pm2:mon": "pm2 monit",
+    "pm2:kill": "pm2 kill"
   },
   "keywords": [],
   "author": "",
