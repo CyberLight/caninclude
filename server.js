@@ -440,10 +440,8 @@ app.all('*', checkHttps);
 app.use(countRequests);
 app.use(favicon(path.join(__dirname, 'favicon.ico')));
 app.use(withCatch(function (req, res, next) {
-    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const onlyClientIp = clientIp.split(',')[0];
-    if (req.session.user && clientIp && (req.session.user.endsWith(clientIp) || req.session.user.endsWith(onlyClientIp))) {
-        req.session.user = req.session.user.replace(clientIp, '').replace(onlyClientIp, '');
+    if (req.session.user && req.session.user.length > 36) {
+        req.session.user = req.session.user.slice(0, 36);
     }
     next();
 }));
