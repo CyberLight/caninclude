@@ -125,31 +125,6 @@ function sendContent(content, res) {
     }
 }
 
-function streamBody(req, res, props = {}, css) {
-    const body = renderToString(html`<${App} ...${props}/>`);
-    sendContent(`
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta property="og:title" content="Can I Include">
-            <meta property="og:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
-            <meta property="og:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
-            <meta property="og:url" content="https://caninclude.glitch.me/">
-            <meta name="twitter:card" content="summary_large_image">
-            <meta property="og:site_name" content="Can I Include">
-
-            <meta name="twitter:title" content="Can I Include">
-            <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
-            <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
-            <meta name="twitter:image:alt" content="Can I Include [main page]">
-            <style>${css}</style>
-        </head>
-        <body>${body}</body>
-    </html>`, res);
-} 
-
 function streamPage(req, res, htmlObj, css) {
     const body = renderToString(htmlObj);
     sendContent(`
@@ -169,6 +144,7 @@ function streamPage(req, res, htmlObj, css) {
             <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
             <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
             <meta name="twitter:image:alt" content="Can I Include [main page]">
+            <link rel="icon" href="/favicon.ico" sizes="16x16" type="image/x-icon">
             <style>${css}</style>
         </head>
         <body>${body}</body>
@@ -390,7 +366,7 @@ queryRouter.get('/include', [
         canAddFeedback
     };
 
-    streamBody(req, res, props, css);
+    streamPage(req, res, html`<${App} ...${props}/>`, css);
 }));
 
 const adminRouter = express.Router(); 
@@ -515,7 +491,7 @@ app.get('/', withCatch(async (req, res) => {
         showFeedback: undefined,
         showFeedbacks: undefined
     };
-    streamBody(req, res, props, css);
+    streamPage(req, res, html`<${App} ...${props}/>`, css);
 }));
 
 app.use(express.urlencoded({ extended: true }))
