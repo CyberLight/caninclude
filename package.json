@@ -21,7 +21,8 @@
     "pm2:kill": "pm2 kill",
     "pm2:logs": "pm2 logs webapp --lines 100",
     "pm2:log:rotate": "pm2 install pm2-logrotate",
-    "pm2:flush": "pm2 flush"
+    "pm2:flush": "pm2 flush",
+    "fix:likes:user": "node ./scripts/fixLikesUserData"
   },
   "keywords": [],
   "author": "",
