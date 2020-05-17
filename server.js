@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const express = require('express');
+const favicon = require('serve-favicon');
 const cookieSession = require('cookie-session');
 const { v4: uuidv4 } = require('uuid');
 const CleanCSS = require('clean-css');
@@ -461,6 +462,7 @@ app.use(cookieSession({
 
 app.all('*', checkHttps);
 app.use(countRequests);
+app.use(favicon(path.join(__dirname, 'favicon.ico')));
 app.use(withCatch(function (req, res, next) {
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const onlyClientIp = clientIp.split(',')[0];
