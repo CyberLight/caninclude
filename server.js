@@ -127,8 +127,7 @@ function sendContent(content, res) {
 
 function streamPage(req, res, htmlObj, css) {
     const body = renderToString(htmlObj);
-    sendContent(`
-    <!DOCTYPE html>
+    res.write(`<!DOCTYPE html>
     <html>
         <head>
             <meta charset="UTF-8">
@@ -144,11 +143,11 @@ function streamPage(req, res, htmlObj, css) {
             <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
             <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
             <meta name="twitter:image:alt" content="Can I Include [main page]">
-            <link rel="icon" href="/favicon.ico" sizes="16x16" type="image/x-icon">
-            <style>${css}</style>
-        </head>
+            <link rel="icon" href="/favicon.ico" sizes="16x16" type="image/x-icon">`);
+    res.write(`<style>${css}</style>`);
+    res.end(`</head>
         <body>${body}</body>
-    </html>`, res);
+    </html>`);
 } 
 
 function createSetOfKeyWords(tag, categoryName, forceAddTagName = false) {
