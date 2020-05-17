@@ -43,5 +43,6 @@ archive.file('utils.js', { name: 'utils.js' });
 archive.file('spec.json', { name: 'spec.json' });
 archive.file('.data/.keep', { name: '.data/.keep' });
 archive.file('ecosystem.config.js', { name: 'ecosystem.config.js' });
+archive.file('favicon.ico', { name: 'favicon.ico' });
 
 archive.finalize();
