@@ -127,27 +127,34 @@ function sendContent(content, res) {
 
 function streamPage(req, res, htmlObj, css) {
     const body = renderToString(htmlObj);
+    res.set({ 'Content-Type': 'text/html' });
     res.write(`<!DOCTYPE html>
-    <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta property="og:title" content="Can I Include">
-            <meta property="og:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
-            <meta property="og:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
-            <meta property="og:url" content="https://caninclude.glitch.me/">
-            <meta name="twitter:card" content="summary_large_image">
-            <meta property="og:site_name" content="Can I Include">
+<html>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta property="og:title" content="Can I Include">
+        <meta property="og:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
+        <meta property="og:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
+        <meta property="og:url" content="https://caninclude.glitch.me/">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta property="og:site_name" content="Can I Include">
 
-            <meta name="twitter:title" content="Can I Include">
-            <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
-            <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
-            <meta name="twitter:image:alt" content="Can I Include [main page]">
-            <link rel="icon" href="/favicon.ico" sizes="16x16" type="image/x-icon">`);
-    res.write(`<style>${css}</style>`);
-    res.end(`</head>
-        <body>${body}</body>
-    </html>`);
+        <meta name="twitter:title" content="Can I Include">
+        <meta name="twitter:description" content="'Can I Include' tool to help determine if one HTML tag can be included in another HTML tag">
+        <meta name="twitter:image" content="https://cdn.glitch.com/19f7087b-7781-4727-9c59-2100bafabbf2%2Fsite-preview.png?v=1588606121865">
+        <meta name="twitter:image:alt" content="Can I Include [main page]">
+        <title>Can I include a tag to a tag? Based on HTML Spec WHATWG</title>
+        <link rel="icon" href="/favicon.ico" sizes="16x16" type="image/x-icon">`);
+    res.write(`
+        <style>${css}</style>
+    `);
+    res.end(`
+    </head>
+    <body>
+    ${body}
+    </body>
+</html>`);
 } 
 
 function createSetOfKeyWords(tag, categoryName, forceAddTagName = false) {
