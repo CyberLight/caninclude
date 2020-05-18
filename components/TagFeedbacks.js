@@ -12,15 +12,15 @@ class TagFeedbacks extends Component {
     render({ feedbacks = [], request, show }) {
         return show && feedbacks && feedbacks.length && html`
         <section class="feedback-container">
-           <h4>Last 10 feedbacks by current tag pair</h4>
+           <h2>Last 10 feedbacks by current tag pair</h2>
            <a href="${request.url}" class="feedback__hide-button">Hide feedback</a>
             <div class="feedback__table-container">
                 <table class="feedback__table">
                     <tr class="table__head">
-                        <th class="table__col table__col--left">Text</th>
-                        <th class="table__col table__col--center table__col--small">Yours</th>
-                        <th class="table__col table__col--center table__col--small">Resolved</th>
-                        <th class="table__col table__col--center table__col--small">Approved</th>
+                        <th scope="col" class="table__col table__col--left">Text</th>
+                        <th scope="col" class="table__col table__col--center table__col--small">Yours</th>
+                        <th scope="col" class="table__col table__col--center table__col--small">Resolved</th>
+                        <th scope="col" class="table__col table__col--center table__col--small">Approved</th>
                     </tr>
                     ${ feedbacks.map(feedback => html`
                         <tr class="table__row">

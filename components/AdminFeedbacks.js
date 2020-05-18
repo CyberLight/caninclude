@@ -15,15 +15,15 @@ class AdminFeedbacks extends Component {
                 <table class="feedback__table">
                     <thead>
                     <tr class="table__head">
-                        <th class="table__col table__col--left">ID</th>
-                        <th class="table__col table__col--left">Text</th>
-                        <th class="table__col table__col--center">UserId</th>
-                        <th class="table__col table__col--center">Tags Pair</th>
-                        <th class="table__col table__col--center table__col--small">Resolved</th>
-                        <th class="table__col table__col--center table__col--small">Approved</th>
-                        <th class="table__col table__col--center table__col--small"></th>
-                        <th class="table__col table__col--center table__col--small"></th>
-                        <th class="table__col table__col--center table__col--small"></th>
+                        <th scope="col" class="table__col table__col--left">ID</th>
+                        <th scope="col" class="table__col table__col--left">Text</th>
+                        <th scope="col" class="table__col table__col--center">UserId</th>
+                        <th scope="col" class="table__col table__col--center">Tags Pair</th>
+                        <th scope="col" class="table__col table__col--center table__col--small">Resolved</th>
+                        <th scope="col" class="table__col table__col--center table__col--small">Approved</th>
+                        <th scope="col" class="table__col table__col--center table__col--small"></th>
+                        <th scope="col" class="table__col table__col--center table__col--small"></th>
+                        <th scope="col" class="table__col table__col--center table__col--small"></th>
                     </tr>
                     </thead>
                     <tbody>

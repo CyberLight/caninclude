@@ -8,14 +8,14 @@ class QuickResults extends Component {
     render({ tagStats = [] }) {
         return tagStats && html`
                     <section class="about__quick-results">
-                        <h4 class="quick-results__header"><i>Last ${tagStats.length} Quick Results</i></h4>
+                        <h2 class="quick-results__header"><i>Last ${tagStats.length} Quick Results</i></h2>
                         <table class="quick-results__table">
                             <tr class="table__head">
-                                <th class="table__col">Child</th>
-                                <th class="table__col">Parent</th>
-                                <th class="table__col">Can Include?</th>
-                                <th class="table__col">Count</th>
-                                <th class="table__col">Link to</th>
+                                <th scope="col" class="table__col">Child</th>
+                                <th scope="col" class="table__col">Parent</th>
+                                <th scope="col" class="table__col">Can Include?</th>
+                                <th scope="col" class="table__col">Count</th>
+                                <th scope="col" class="table__col">Link to</th>
                             </tr>
                             ${tagStats.map(({ child, parent, canInclude, count }) =>
                                 html`
