@@ -708,6 +708,12 @@ input {
     margin: 0 auto;
 }
 
+.search__title {
+    visibility: hidden;
+    height: 0px;
+    margin: 0px;
+}
+
 /* Media sections */
 @media only screen and (max-width: 860px) {
     .tag {
