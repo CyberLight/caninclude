@@ -15,7 +15,8 @@
     --color-content-bg: #242424;
     --color-section-bg: #262930;
     --color-section-head-bg: #414141;
-    
+    --color-dark-textarea-bg: #2b2a2a;
+
     --color-link: #ae80ff; 
     --color-button-hover: var(--color-link);
     --color-link-highlight: #f08d49; 
@@ -605,7 +606,7 @@ input {
     resize: vertical;
     font-size: large;
     color: var(--color-text);
-    background-color: var(--color-content-bg);
+    background-color: var(--color-dark-textarea-bg);
     border: none;
     border-bottom: 2px solid var(--color-section-head-bg);
 }
@@ -618,8 +619,7 @@ input {
 .feedback-form__tooltip {
     left: 0;
     right: 0;
-    padding: 0 10px;
-    background-color: var(--color-input-bg);
+    font-size: x-small;
 }
 
 .actions__button {
