@@ -22,7 +22,8 @@
     "pm2:logs": "pm2 logs webapp --lines 100",
     "pm2:log:rotate": "pm2 install pm2-logrotate",
     "pm2:flush": "pm2 flush",
-    "fix:likes:user": "node ./scripts/fixLikesUserData"
+    "fix:likes:user": "node ./scripts/fixLikesUserData",
+    "html:check": "node ./scripts/htmlcheck"
   },
   "keywords": [],
   "author": "",
@@ -45,6 +46,7 @@
     "puppeteer": "^3.0.1",
     "serve-favicon": "^2.5.0",
     "sqlite3": "^4.2.0",
-    "uuid": "^8.0.0"
+    "uuid": "^8.0.0",
+    "html-validator": "^5.1.12"
   }
 }
