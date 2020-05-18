@@ -129,8 +129,8 @@ function streamPage(req, res, htmlObj, css) {
     const body = renderToString(htmlObj);
     res.set({ 'Content-Type': 'text/html' });
     res.write(`<!DOCTYPE html>
-<html>
-    <head lang="en">
+<html lang="en">
+    <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta property="og:title" content="Can I Include">
