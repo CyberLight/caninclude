@@ -5,10 +5,10 @@ class Support extends Component {
         return html`
             <table class="tag__table">
                 <tr class="table__head">
-                    <th>Browser</th>
-                    <th>Web HTML</th>
-                    <th>Web API</th>
-                    <th>CanIUse</th>
+                    <th scope="col">Browser</th>
+                    <th scope="col">Web HTML</th>
+                    <th scope="col">Web API</th>
+                    <th scope="col">CanIUse</th>
                 </tr>
                 ${Object.entries(data).map(([browser, row]) => 
                     html`<tr class="table__tr"><td>${browser}</td>${Object.values(row)
