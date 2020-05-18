@@ -1,14 +1,21 @@
+const validator = require('html-validator');
 (async () => {
-    const validator = require('html-validator')
-    const options = {
-        url: 'http://localhost:3000',
-        validator: 'WHATWG',
-        format: 'text'
-    }
+    const options = [
+        {
+            url: 'http://localhost:3000',
+            validator: 'WHATWG',
+            format: 'text'
+        }, {
+            url: 'http://localhost:3000/can/include/?child=article&parent=article',
+            validator: 'WHATWG',
+            format: 'text'
+        }]
 
     try {
-        const result = await validator(options)
-        console.log(result)
+        const results = await Promise.all(options.map(option => validator(option))); 
+        results.forEach(result => {
+            console.log(result);
+        });
     } catch (error) {
         console.error(error)
     }
