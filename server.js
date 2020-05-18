@@ -40,7 +40,7 @@ const invitesManager = new InvitesManager(dbConnection);
 const port = process.env.PORT || 3000;
 const messages = {
     makeTransparentContentWarning(parentFormatted) {
-        return `Because the parent <b>&lt;${parentFormatted}/&gt;</b> tag has the <b>Transparent</b> content option and the ability to nest the tag is not fully understood.<br/> Please look at the nearest top element from the <b>&lt${parentFormatted}/&gt;</b> tag (in your HTML markup) or check the <b>Content Model</b> of <b>&lt;${parentFormatted}/&gt;</b> tag section for more details.`;
+        return `Because the parent <b>&lt;${parentFormatted}/&gt;</b> tag has the <b>Transparent</b> content option and the ability to nest the tag is not fully understood.<br/> Please look at the nearest top element from the <b>&lt;${parentFormatted}/&gt;</b> tag (in your HTML markup) or check the <b>Content Model</b> of <b>&lt;${parentFormatted}/&gt;</b> tag section for more details.`;
     },
     makeAllMessagesConditional(parentFormatted, childFormatted) {
         return `The parent <b>Content Model</b> section contains only conditional statements. Please check if the child tag <b>&lt;${childFormatted}/&gt;</b> matches the conditions of the parent <b>&lt;${parentFormatted}/&gt;</b>, and make a decision based on this.`;
