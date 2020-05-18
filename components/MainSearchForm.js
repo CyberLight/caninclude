@@ -5,6 +5,7 @@ class MainSearchForm extends Component {
     render({ parent = '', child = '', show = true, specVersion }) {
         return show && html`
         <section class="search">
+            <h3 class="search__title">Check when a tag can be included in another tag</h3>
             <form id="search" autocomplete="off" class="search__form" action="/can/include/" method="get">
                 <label class="head head--big" for="child"><${ColorText}>Can I Include*</${ColorText}></label>
                 <p class="search__spec-version"><span class="head head--small">Based on HTML spec | Last Updated ${specVersion}</span></p><br/>
