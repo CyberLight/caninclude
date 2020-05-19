@@ -121,3 +121,5 @@ searchstat.json
 !.data/.keep
 
 .DS_Store
+
+fakes/
