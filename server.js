@@ -293,8 +293,8 @@ queryRouter.get('/include', [
     const tips = [];
     const { parent, child, like, dislike, unlike, undislike, feedback, feedbacks } = req.query;
     let votes = null;
-    const parentFormatted = parent.toLowerCase();
-    const childFormatted = child.toLowerCase();
+    const parentFormatted = parent.toLowerCase().trim();
+    const childFormatted = child.toLowerCase().trim();
     const parentTag = db[parentFormatted];
     const childTag = db[childFormatted];
     if (!parentTag || !childTag) return res.redirect('/');
