@@ -25,6 +25,7 @@ const renderToString = require('preact-render-to-string');
 const { check, validationResult } = require('express-validator');
 
 const readFile = util.promisify(fs.readFile);
+const fileExists = util.promisify(fs.exists);
 const FeedbackDailyLimit = Number(process.env.FEEDBACK_DAILY_LIMIT || 20);
 const app = express();
 
@@ -498,7 +499,23 @@ app.get('/', withCatch(async (req, res) => {
     streamPage(req, res, html`<${App} ...${props}/>`, css);
 }));
 
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
+
+/** Fake response for chinesse pentesters */
+async function fakeZipsHandler(req, res, next) {
+    const fakeZipFilePath = path.join(__dirname, 'fakes', 'www.zip');
+    const isExists = await fileExists(fakeZipFilePath);
+    if (isExists) {
+        const stream = fs.createReadStream(fakeZipFilePath);
+        stream.pipe(res);
+    } else {
+        next();
+    }
+}
+app.get('/www.zip', fakeZipsHandler);
+app.get('/web.zip', fakeZipsHandler);
+/* Fake section end */
+
 app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/can', queryRouter);
 app.use('/cookies', cookieRouter);
