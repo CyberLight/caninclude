@@ -1,4 +1,4 @@
-# CANINCLUDE
+# CAN I INCLUDE
 
 <div align="center">
     <img src="docs/images/logo.png" width="360px"/>
