@@ -1,15 +1,15 @@
 # CANINCLUDE
 
-<div align="center" style="background:rgb(36, 36, 36);">
+<div align="center">
     <img src="docs/images/logo.png" width="360px"/>
 </div>
 
 This project provides functionality to test whether one tag can be included in another. Based on information from [HTML Spec WHATWG](https://html.spec.whatwg.org/)
 
-<div align="center" style="background:rgb(36, 36, 36);">
+<div align="center">
     <img src="docs/images/no.png" alt="Nikulin" width="55px"/>
     <img src="docs/images/doubt.png" alt="Margunov" width="55px"/>
-    <img src="docs/images/yes.png" alt="Vicin" width="45px"/>
+    <img src="docs/images/yes.png" alt="Vicin" width="44px"/>
 </div>
 
 Please, see **Demo** [here](https://caninclude.glitch.me)
@@ -20,7 +20,7 @@ Please, see **Demo** [here](https://caninclude.glitch.me)
 
 ### Development environment
 * [VSCode](https://code.visualstudio.com/)
-* [VSCode Remote Conrainers](https://code.visualstudio.com/docs/remote/containers#_installation)
+* [VSCode Remote Containers](https://code.visualstudio.com/docs/remote/containers#_installation)
 * Clone `git clone https://github.com/CyberLight/caninclude`
 * Go to cloned project repo folder `cd caninclude`
 * Open in VSCode `code .`
