@@ -501,20 +501,12 @@ app.get('/', withCatch(async (req, res) => {
 
 app.use(express.urlencoded({ extended: true }));
 
-/** Fake response for chinesse pentesters */
-async function fakeZipsHandler(req, res, next) {
-    const fakeZipFilePath = path.join(__dirname, 'fakes', 'www.zip');
-    const isExists = await fileExists(fakeZipFilePath);
-    if (isExists) {
-        const stream = fs.createReadStream(fakeZipFilePath);
-        stream.pipe(res);
-    } else {
-        next();
-    }
-}
-app.get('/www.zip', fakeZipsHandler);
-app.get('/web.zip', fakeZipsHandler);
-/* Fake section end */
+app.get('/robots.txt', (req, res) => {
+    res.set({ 'Content-Type': 'text/plain' });
+    res.send(`User-agent: *
+Disallow:
+`);
+})
 
 app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/can', queryRouter);
