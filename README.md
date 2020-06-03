@@ -1,15 +1,13 @@
 # CAN I INCLUDE
 
 <div align="center">
-    <img src="docs/images/logo.png" width="360px"/>
+    <img src="docs/images/logo.png" width="260px"/>
 </div>
 
 This project provides functionality to test whether one tag can be included in another. Based on information from [HTML Spec WHATWG](https://html.spec.whatwg.org/)
 
 <div align="center">
-    <img src="docs/images/no.png" alt="Nikulin" width="55px"/>
-    <img src="docs/images/doubt.png" alt="Margunov" width="55px"/>
-    <img src="docs/images/yes.png" alt="Vicin" width="44px"/>
+    <img src="docs/images/faces.png" width="255px"/>
 </div>
 
 Please, see **Demo** [here](https://caninclude.glitch.me)
