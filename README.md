@@ -18,7 +18,7 @@ Please, see **Demo** [here](https://caninclude.glitch.me)
     <img src="docs/images/app_main_screen.png" width="560px"/>
 </div>
 
-### Development environment
+## Development environment
 * [VSCode](https://code.visualstudio.com/)
 * [VSCode Remote Containers](https://code.visualstudio.com/docs/remote/containers#_installation)
 * Clone `git clone https://github.com/CyberLight/caninclude`
@@ -27,10 +27,10 @@ Please, see **Demo** [here](https://caninclude.glitch.me)
 * In popup menu click by `Reopen in Container`
 * Whew!
 
-### Setup spec.json for app
+## Setup spec.json for app
 * `npm run crawl` - this command crawl html spec page and make json data for app
 
-### How to run app in development
+## How to run app in development
 * `npm run dev` - this open app using **nodemon**
 * Go to url `http://localhost:3000` in your browser
 * That's all!
@@ -39,11 +39,11 @@ Please, see **Demo** [here](https://caninclude.glitch.me)
 * Need to set env variables from [Environment variables](#environment-variables)  section
 * `npm start` - this command launch an app using **pm2** using **ecosystem.config.js**
 
-### Environment variables
+## Environment variables
 * `COOKIE_KEY` - a key for sign cookies `type: String`
 * `FEEDBACK_DAILY_LIMIT` - a limit count of feedbacks daily `type: Integer`
 
-### Project structure
+## Project structure
 * **.data** - a folder for sqlite database
 * **.devcontainer** - a folder with VSCode Remote Containers configuration
 * **components** - a folder with server components that was written in **Preact**.
@@ -55,7 +55,7 @@ Please, see **Demo** [here](https://caninclude.glitch.me)
 * **specfix.js** - a script for making some additional json data transformations
 * **utils.js** - file with helper data managers and helper functions
 
-### Project routes that are important
+## Project routes that are important
 * `/` - Main page with some counters by usage of app and results for each tags
 * `/can/include?parent=&child=` - renders page with full information and result of ability to include one tag into another
 * `/admin/feedbacks` - ui for manage and view feedbacks 
@@ -64,3 +64,6 @@ Please, see **Demo** [here](https://caninclude.glitch.me)
         * This script will output url like this: `/invites/81493f1f9a306f64417b91960f6ded3b/apply`
         * Go to your browser and concatenate `http://localhost:3000` and `/invites/81493f1f9a306f64417b91960f6ded3b/apply` and press `Enter`
         * After that you can access to `/admin/feedbacks`
+
+## License
+See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
