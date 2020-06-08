@@ -1,5 +1,6 @@
 const { html, Component } = require('htm/preact');
 const ColorText = require('./ColorText');
+const SwapButton = require('./SwapButton');
 
 class MainSearchForm extends Component {
     render({ parent = '', child = '', show = true, specVersion }) {
@@ -11,7 +12,7 @@ class MainSearchForm extends Component {
                 <p class="search__spec-version"><span class="head head--small">Based on HTML spec | Last Updated ${specVersion}</span></p><br/>
                 <div class="search__container">
                     <input autofocus type="text" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
-                    <label class="divider">to</label>
+                    <${SwapButton}/>
                     <input type="text" id="parent" name="parent" autocomplete="off" placeholder="Parent tag name" value="${parent.toLowerCase()}"/>
                     <button class="search__button search__button--accent" type="submit">?</button>
                 </div>
