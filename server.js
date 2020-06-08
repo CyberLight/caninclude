@@ -292,13 +292,19 @@ queryRouter.get('/include', [
 
     const { user } = req.session;
     const tips = [];
-    const { parent, child, like, dislike, unlike, undislike, feedback, feedbacks } = req.query;
+    const { parent, child, like, dislike, unlike, undislike, feedback, feedbacks, swap } = req.query;
     let votes = null;
-    const parentFormatted = parent.toLowerCase().trim();
-    const childFormatted = child.toLowerCase().trim();
-    const parentTag = db[parentFormatted];
-    const childTag = db[childFormatted];
+    let parentFormatted = parent.toLowerCase().trim();
+    let childFormatted = child.toLowerCase().trim();
+    let parentTag = db[parentFormatted];
+    let childTag = db[childFormatted];
+    
     if (!parentTag || !childTag) return res.redirect('/');
+    if (swap === 'on') {
+        [parentTag, childTag] = [childTag, parentTag];
+        [parentFormatted, childFormatted] = [childFormatted, parentFormatted];
+    }
+
     const currentUrl = `?parent=${parentFormatted}&child=${childFormatted}`;
     await counter.load();
 
