@@ -293,7 +293,6 @@ input {
 .head {
     text-align: center;
     margin-block-start: 0;
-    padding-top: 0.67em;
     font-size: var(--size-head-font);
     margin-block-end: 0;
     line-height: 1em;
@@ -320,7 +319,10 @@ input {
 .search__form {
     width: 90%;
     margin: 0 auto;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
 
 .search__button {
@@ -351,11 +353,17 @@ input {
     display: flex;
     flex-direction: row; 
     justify-content: center;  
+    align-items: center;
 }
 
 .search__spec-version {
     margin-block-start: 0;
     margin-block-end: 0;
+}
+
+.form__content {
+    display: flex;
+    align-items: center;
 }
 
 .footer {
@@ -720,6 +728,47 @@ input {
     animation:octocat-wave 560ms ease-in-out
 }
 
+.swap__icon {
+    width: 30px;
+    height: 30px;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.swap {
+    display: inline-block;
+    height: 30px;
+    position: relative;
+    padding-left: 30px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.swap--bordered {
+    margin-bottom: 5px;
+}
+
+.swap__option {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.swap__icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20id%3D%22Layer_1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%20512.006%20512.006%22%20style%3D%22enable-background%3Anew%200%200%20512.006%20512.006%3B%22%20xml%3Aspace%3D%22preserve%22%3E%0A%3Cpath%20style%3D%22fill%3A%23CFCDCF%3B%22%20d%3D%22M23.151%2C149.616l115.072%2C115.072c7.901%2C7.901%2C20.713%2C7.901%2C28.614%2C0s7.901-20.713%2C0-28.614%20%20l-44.568-44.568h316.313v-0.001c31.036%2C0%2C56.198-25.16%2C56.198-56.198c0-31.036-25.16-56.198-56.198-56.198H122.269l44.568-44.568%20%20c3.951-3.951%2C5.927-9.129%2C5.927-14.308s-1.976-10.357-5.927-14.308c-7.901-7.901-20.713-7.901-28.614%2C0L23.151%2C121.002%20%20C15.25%2C128.903%2C15.25%2C141.715%2C23.151%2C149.616z%22%2F%3E%0A%3Cpath%20style%3D%22fill%3A%23B1B0BC%3B%22%20d%3D%22M23.151%2C149.616l115.072%2C115.072c7.901%2C7.901%2C20.713%2C7.901%2C28.614%2C0s7.901-20.713%2C0-28.614%20%20l-44.568-44.568h139.247V79.111H122.269l44.568-44.568c3.951-3.951%2C5.927-9.129%2C5.927-14.308s-1.976-10.357-5.927-14.308%20%20c-7.901-7.901-20.713-7.901-28.614%2C0L23.151%2C121.002C15.25%2C128.903%2C15.25%2C141.715%2C23.151%2C149.616z%22%2F%3E%0A%3Cpath%20style%3D%22fill%3A%23CFCDCF%3B%22%20d%3D%22M488.855%2C362.39L373.783%2C247.318c-7.901-7.901-20.713-7.901-28.614%2C0%20%20c-7.901%2C7.901-7.901%2C20.713%2C0%2C28.614l44.567%2C44.568H73.423v0.001c-31.036%2C0-56.198%2C25.16-56.198%2C56.198%20%20c0%2C31.036%2C25.16%2C56.198%2C56.198%2C56.198h316.314l-44.568%2C44.568c-3.951%2C3.951-5.927%2C9.129-5.927%2C14.308%20%20c0%2C5.179%2C1.976%2C10.357%2C5.927%2C14.308c7.901%2C7.901%2C20.713%2C7.901%2C28.614%2C0l115.072-115.072%20%20C496.757%2C383.103%2C496.757%2C370.291%2C488.855%2C362.39z%22%2F%3E%0A%3Cpath%20style%3D%22fill%3A%23B1B0BC%3B%22%20d%3D%22M488.855%2C362.39L373.783%2C247.318c-7.901-7.901-20.713-7.901-28.614%2C0%20%20c-7.901%2C7.901-7.901%2C20.713%2C0%2C28.614l44.567%2C44.568H261.518v112.395h128.218l-44.568%2C44.568c-3.951%2C3.951-5.927%2C9.129-5.927%2C14.308%20%20c0%2C5.179%2C1.976%2C10.357%2C5.927%2C14.308c7.901%2C7.901%2C20.713%2C7.901%2C28.614%2C0l115.072-115.072%20%20C496.757%2C383.103%2C496.757%2C370.291%2C488.855%2C362.39z%22%2F%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+}
+
+.swap__option:checked ~ .swap__icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20id%3D%22Layer_1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%20512.006%20512.006%22%20style%3D%22enable-background%3Anew%200%200%20512.006%20512.006%3B%22%20xml%3Aspace%3D%22preserve%22%3E%0A%3Cpath%20style%3D%22fill%3A%23D83249%3B%22%20d%3D%22M23.151%2C149.616l115.072%2C115.072c7.901%2C7.901%2C20.713%2C7.901%2C28.614%2C0s7.901-20.713%2C0-28.614%20%20l-44.568-44.568h316.313v-0.001c31.036%2C0%2C56.198-25.16%2C56.198-56.198c0-31.036-25.16-56.198-56.198-56.198H122.269l44.568-44.568%20%20c3.951-3.951%2C5.927-9.129%2C5.927-14.308s-1.976-10.357-5.927-14.308c-7.901-7.901-20.713-7.901-28.614%2C0L23.151%2C121.002%20%20C15.25%2C128.903%2C15.25%2C141.715%2C23.151%2C149.616z%22%2F%3E%0A%3Cpath%20style%3D%22fill%3A%23FF4F59%3B%22%20d%3D%22M23.151%2C149.616l115.072%2C115.072c7.901%2C7.901%2C20.713%2C7.901%2C28.614%2C0s7.901-20.713%2C0-28.614%20%20l-44.568-44.568h139.247V79.111H122.269l44.568-44.568c3.951-3.951%2C5.927-9.129%2C5.927-14.308s-1.976-10.357-5.927-14.308%20%20c-7.901-7.901-20.713-7.901-28.614%2C0L23.151%2C121.002C15.25%2C128.903%2C15.25%2C141.715%2C23.151%2C149.616z%22%2F%3E%0A%3Cpath%20style%3D%22fill%3A%20%2302b3b1%3B%22%20d%3D%22M488.855%2C362.39L373.783%2C247.318c-7.901-7.901-20.713-7.901-28.614%2C0%20%20c-7.901%2C7.901-7.901%2C20.713%2C0%2C28.614l44.567%2C44.568H73.423v0.001c-31.036%2C0-56.198%2C25.16-56.198%2C56.198%20%20c0%2C31.036%2C25.16%2C56.198%2C56.198%2C56.198h316.314l-44.568%2C44.568c-3.951%2C3.951-5.927%2C9.129-5.927%2C14.308%20%20c0%2C5.179%2C1.976%2C10.357%2C5.927%2C14.308c7.901%2C7.901%2C20.713%2C7.901%2C28.614%2C0l115.072-115.072%20%20C496.757%2C383.103%2C496.757%2C370.291%2C488.855%2C362.39z%22%2F%3E%0A%3Cpath%20style%3D%22fill%3A%2367cdcc%3B%22%20d%3D%22M488.855%2C362.39L373.783%2C247.318c-7.901-7.901-20.713-7.901-28.614%2C0%20%20c-7.901%2C7.901-7.901%2C20.713%2C0%2C28.614l44.567%2C44.568H261.518v112.395h128.218l-44.568%2C44.568c-3.951%2C3.951-5.927%2C9.129-5.927%2C14.308%20%20c0%2C5.179%2C1.976%2C10.357%2C5.927%2C14.308c7.901%2C7.901%2C20.713%2C7.901%2C28.614%2C0l115.072-115.072%20%20C496.757%2C383.103%2C496.757%2C370.291%2C488.855%2C362.39z%22%2F%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3Cg%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+}
+
 @keyframes octocat-wave{
     0%,100%{
         transform:rotate(0)
@@ -743,6 +792,10 @@ input {
 
 /* Media sections */
 @media only screen and (max-width: 860px) {
+    .head {
+        padding-top: 0.67em;
+    }
+    
     .tag {
         justify-content: center;
         position: relative;
@@ -795,7 +848,7 @@ input {
         flex-direction: column;   
     }
 
-    .search__form {
+    .form__content {
         flex-direction: column;
         display: flex;
         align-items: center;
