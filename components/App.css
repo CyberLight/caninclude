@@ -749,6 +749,11 @@ input {
     user-select: none;
 }
 
+.swap__option:focus + .swap__icon {
+    outline: 1px dotted #212121;
+    outline: 5px auto -webkit-focus-ring-color;
+}
+
 .swap--bordered {
     margin-bottom: 5px;
 }
