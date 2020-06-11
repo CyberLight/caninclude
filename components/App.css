@@ -724,6 +724,12 @@ input {
     width: 0px;
 }
 
+.github-corner {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
 .github-corner:hover .octo-arm{
     animation:octocat-wave 560ms ease-in-out
 }
