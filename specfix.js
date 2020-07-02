@@ -17,7 +17,7 @@ const writeFile = util.promisify(fs.writeFile);
             if (resultNegative.length > 1) {
                 let prevPart = '';
                 for (const part of resultNegative) {
-                    if (['no', 'not'].includes(prevPart.toLowerCase())) {
+                    if (['no', 'not'].includes(prevPart.toLowerCase()) && !part.trim().startsWith('more than one')) {
                         const filteredKeywords = keywords.filter(value => new RegExp(`\\b(${value})\\b`, 'gi').test(part));
                         negativeKeywords.push(...filteredKeywords);
                     }
