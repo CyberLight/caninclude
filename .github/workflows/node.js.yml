@@ -27,3 +27,10 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
+    - name: "Lighthouse CI step"
+      run: |
+        npm install -g @lhci/cli@0.4.x 
+        lhci autorun
+      env:
+        LHI_URL: ${{ secrets.LHI_URL }}
+        LHI_BUILD_KEY: ${{ secrets.LHI_BUILD_TOKEN }}
