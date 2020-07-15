@@ -23,7 +23,8 @@
     "pm2:log:rotate": "pm2 install pm2-logrotate",
     "pm2:flush": "pm2 flush",
     "fix:likes:user": "node ./scripts/fixLikesUserData",
-    "html:check": "node ./scripts/htmlcheck"
+    "html:check": "node ./scripts/htmlcheck",
+    "serve:lhci": "npm run crawl && NODE_ENV=production node server.js"
   },
   "keywords": [],
   "author": "",
