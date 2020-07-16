@@ -29,6 +29,7 @@ jobs:
     - run: npm test
     - name: "Lighthouse CI step"
       run: |
+        echo "{ \"serverBaseUrl\": \"$LHI_URL\", \"token\": \"$LHI_BUILD_KEY\" }" > lhci_settings.json
         npm install -g @lhci/cli@0.4.x 
         lhci autorun
       env:
