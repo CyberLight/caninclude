@@ -123,3 +123,6 @@ searchstat.json
 .DS_Store
 
 fakes/
+
+lhci_settings.json
+.lighthouseci
