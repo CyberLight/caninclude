@@ -31,7 +31,7 @@ jobs:
       run: |
         echo "{ \"serverBaseUrl\": \"$LHI_URL\", \"token\": \"$LHI_BUILD_KEY\" }" > lhci_settings.json
         npm install -g @lhci/cli@0.4.x 
-        lhci autorun
+        lhci autorun || true
       env:
         LHI_URL: ${{ secrets.LHI_URL }}
         LHI_BUILD_KEY: ${{ secrets.LHI_BUILD_TOKEN }}
