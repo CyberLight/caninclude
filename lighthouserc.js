@@ -1,10 +1,15 @@
+const settings = require('./lhci_settings.json');
+
 module.exports = {
     ci: {
         collect: {
             url: [
                 "http://localhost:3000/",
                 "http://localhost:3000/can/include/?child=h2&parent=button",
-            ]
+            ],
+            settings: {
+                chromeFlags: "--disable-gpu --no-sandbox --disable-setuid-sandbox"
+            }
         },
         assert: {
             preset: "lighthouse:no-pwa",
@@ -17,8 +22,8 @@ module.exports = {
         },
         upload: {
             target: 'lhci',
-            serverBaseUrl: process.env.LHI_URL,
-            token: process.env.LHI_BUILD_TOKEN
+            serverBaseUrl: settings.serverBaseUrl,
+            token: settings.token
         },
     },
 };
