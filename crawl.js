@@ -117,7 +117,7 @@ const options = {
                 }
                 next();
             } 
-            if (currentNode.matches && currentNode.matches('aside.mdn-anno')) {
+            if (currentNode.matches && currentNode.matches('div.mdn-anno')) {
                 const a = currentNode.querySelector('.feature a');
                 result['WebHTMLElement'] = {
                     link: a.href,
@@ -126,7 +126,7 @@ const options = {
                 }
                 next();
             }
-            if (currentNode.matches && currentNode.matches('aside.mdn-anno')) {
+            if (currentNode.matches && currentNode.matches('div.mdn-anno')) {
                 const a = currentNode.querySelector('.feature a');
                 result['WebAPI'] = {
                     link: a.href,
