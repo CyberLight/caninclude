@@ -97,7 +97,6 @@ input {
     will-change: width;
     -webkit-transition: width .25s ease;
     transition: width .25s ease;
-    outline: none;
 }
 
 /* classes style */
@@ -296,6 +295,7 @@ input {
     font-size: var(--size-head-font);
     margin-block-end: 0;
     line-height: 1em;
+    font-weight: normal;
 }
 
 .head__link--regular {
@@ -753,6 +753,7 @@ input {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    font-size: 0;
 }
 
 .swap__option:focus + .swap__icon {

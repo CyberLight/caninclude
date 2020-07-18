@@ -6,6 +6,7 @@ class SwapButton extends Component {
             <label class="swap" ...${props}>
                 <input class="swap__option" type="checkbox" name="swap"/>
                 <span class="swap__icon"></span>
+                Swap tag names
             </label>`;
     }
 }
