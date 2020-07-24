@@ -607,6 +607,72 @@ class InvitesManager extends DbManager {
     }
 }
 
+class StatManager extends DbManager {
+    constructor(conn) {
+        super(conn);
+        this.cacheKey = null;
+        this.maxUniqCount = 0;
+        this.cacheValues = null;
+    }
+    get totalCount() {
+        return this.maxUniqCount;
+    }
+    async getStatCountersFor2Weeks() {
+        const shortDateNow = new Date().toISOString().substring(0, 10);
+        if (this.cacheKey !== shortDateNow) {
+                this.cacheKey = shortDateNow;
+                const { maximum } = await this.getAsync('SELECT MAX(count) as maximum from (SELECT COUNT(id) as count FROM counters c2 GROUP BY c2.created)');
+                this.maxUniqCount = maximum;
+                this.cacheValues = await this.allAsync(`SELECT curr.count as nowCount, prev.count as prevCount, curr.dayofweek FROM
+        (SELECT COUNT(id) as count, c2.created, 
+        case cast (strftime('%w', c2.created) as integer)
+            when 0 then 'Su'
+            when 1 then 'Mo'
+            when 2 then 'Tu'
+            when 3 then 'We'
+            when 4 then 'Th'
+            when 5 then 'Fr'
+            else 'Sa' 
+        end as dayofweek 
+        FROM counters c2 
+        WHERE c2.created >= date('${shortDateNow}', '-13 days') 
+        AND c2.created <= date('${shortDateNow}', '-7 days') 
+        GROUP BY c2.created ORDER BY c2.created) as prev
+        LEFT JOIN  
+        (SELECT COUNT(id) as count, c2.created, 
+        case cast (strftime('%w', c2.created) as integer)
+            when 0 then 'Su'
+            when 1 then 'Mo'
+            when 2 then 'Tu'
+            when 3 then 'We'
+            when 4 then 'Th'
+            when 5 then 'Fr'
+            else 'Sa' 
+        end as dayofweek 
+        FROM counters c2 
+        WHERE c2.created >= date('${shortDateNow}', '-6 days') 
+        AND c2.created <= '${shortDateNow}' 
+        GROUP BY c2.created ORDER BY c2.created) as curr
+        ON curr.dayofweek = prev.dayofweek`
+                );
+        }
+        return Promise.resolve(this.cacheValues);
+    }
+}
+
+function getBarCssByValues(left, right, total) {
+    const leftValue = Number(left);
+    const rightValue = Number(right);
+    const isLower = leftValue < rightValue;
+    const heightInPercent = Number(((leftValue * 100) / total).toFixed(2));
+    const zIndex = isLower ? 2 : 1;
+    return {
+        zIndex,
+        heightInPercent
+    }
+}
+
+module.exports.StatManager = StatManager;
 module.exports.Scheduler = Scheduler;
 module.exports.Counter = Counter;
 module.exports.shortenNumber = shortenNumber;
@@ -616,3 +682,4 @@ module.exports.LikesManager = LikesManager;
 module.exports.HistoryManager = HistoryManager;
 module.exports.InvitesManager = InvitesManager;
 module.exports.RecordNotFoundError = RecordNotFoundError;
+module.exports.getBarCssByValues = getBarCssByValues;
