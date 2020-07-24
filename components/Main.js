@@ -13,7 +13,12 @@ class Main extends Component {
                 <${GithubCorner}/>
             </header>
             ${children}
-            <${Footer} count="${request && request.count || '0'}" uniqCount="${request && request.uniqCount || '0'}"/>
+            <${Footer} 
+                count="${request && request.count || '0'}" 
+                uniqCount="${request && request.uniqCount || '0'}" 
+                twoWeeksStat="${request && request.twoWeeksStat || []}"
+                twoWeeksStatTotalCount="${request && request.twoWeeksStatTotalCount || 1}"
+            />
         </div>`;
     }
 }
