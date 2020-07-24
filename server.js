@@ -15,7 +15,8 @@ const {
     FeedbackManager, 
     HistoryManager, 
     InvitesManager, 
-    RecordNotFoundError 
+    RecordNotFoundError, 
+    StatManager
 } = require('./utils');
 const url = require('url');
 const App = require('./components/App');
@@ -37,6 +38,7 @@ const feedbackManager = new FeedbackManager(dbConnection);
 const counter = new Counter(dbConnection);
 const historyManager = new HistoryManager(dbConnection);
 const invitesManager = new InvitesManager(dbConnection);
+const statManager = new StatManager(dbConnection);
 
 const port = process.env.PORT || 3000;
 const messages = {
@@ -356,6 +358,7 @@ queryRouter.get('/include', [
     }
 
     const queryParams = { user, parent: parentFormatted, child: childFormatted };
+    const twoWeeksStat = await statManager.getStatCountersFor2Weeks();
 
     const props = { 
         form: { parent: parentFormatted, result, child: childFormatted }, 
@@ -365,7 +368,9 @@ queryRouter.get('/include', [
             count: counter.count,
             uniqCount: counter.uniqCount,
             url: currentUrl,
-            user
+            user,
+            twoWeeksStat,
+            twoWeeksStatTotalCount: statManager.totalCount
         },
         specVersion,
         votes,
@@ -386,9 +391,12 @@ const adminRouter = express.Router();
 adminRouter.get('/feedbacks', async (req, res) => {
     const pageNumber = Number(req.query.page || 1);
     const page = await feedbackManager.getAllByPage({ page: pageNumber });
+    const twoWeeksStat = await statManager.getStatCountersFor2Weeks();
     const request = {
         count: counter.count,
-        uniqCount: counter.uniqCount
+        uniqCount: counter.uniqCount,
+        twoWeeksStat,
+        twoWeeksStatTotalCount: statManager.totalCount
     };
     streamPage(req, res, html`<${AdminPage} ..."${page}" request="${request}"/>`, css);
 });
@@ -489,18 +497,21 @@ inviteRouter.get('/:key/apply', withCatch(async (req, res) => {
 app.get('/', withCatch(async (req, res) => {
     await counter.load();
     const tagStats = await historyManager.getLastBy();
+    const twoWeeksStat = await statManager.getStatCountersFor2Weeks();
     const props = { 
         form: { parent: '', child: '' }, 
         tags: [],
         tagStats,
         request: {
             count: counter.count,
-            uniqCount: counter.uniqCount
+            uniqCount: counter.uniqCount,
+            twoWeeksStat,
+            twoWeeksStatTotalCount: statManager.totalCount
         },
         specVersion,
         userAcceptCookie: req.session.userAcceptCookie,
         showFeedback: undefined,
-        showFeedbacks: undefined
+        showFeedbacks: undefined,
     };
     streamPage(req, res, html`<${App} ...${props}/>`, css);
 }));
@@ -537,10 +548,13 @@ app.use(async function errorHandler(err, req, res, next) {
     }
     res.status(500);
     const refererUrl = req.header('Referer') || '/';
+    const twoWeeksStat = await statManager.getStatCountersFor2Weeks();
     const request = {
         count: counter.count,
         uniqCount: counter.uniqCount,
-        url: refererUrl
+        url: refererUrl,
+        twoWeeksStat,
+        twoWeeksStatTotalCount: statManager.totalCount
     };
 
     streamPage(req, res, html`<${ErrorPage} request="${request}"/>`, css);
