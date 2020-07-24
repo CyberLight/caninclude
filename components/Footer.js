@@ -1,8 +1,8 @@
 const { html, Component } = require('htm/preact');
-const { shortenNumber } = require('../utils');
-
+const { shortenNumber, getBarCssByValues } = require('../utils');
+const TwoWeeksCounterBars = require('./TwoWeeksCounterBars');
 class Footer extends Component {
-    render({ count, uniqCount }) {
+    render({ count, uniqCount, twoWeeksStat, twoWeeksStatTotalCount }) {
         const thanksTo = [
             { href: 'https://caniuse.com', text: 'Can I Use' },
             { href: 'https://html.spec.whatwg.org', text: 'HTML Spec WHATWG' },
@@ -20,6 +20,7 @@ class Footer extends Component {
                         <b>Built</b> by <a target="_blank" rel="noopener noreferrer" class="footer__link" href="https://github.com/CyberLight/" target="_blank" rel="noopener noreferrer">@CyberLight</a> a lone developer.
                     </p>
                     <p>Counter: ${shortenNumber(count)} req | ${shortenNumber(uniqCount)} uniq | ${new Date().toJSON().slice(0, 10)}</p>
+                    <${TwoWeeksCounterBars} bars="${twoWeeksStat}" total="${twoWeeksStatTotalCount}"></${TwoWeeksCounterBars}>
                 </div>
             </footer>`;
     }
