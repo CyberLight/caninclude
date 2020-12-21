@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"No tests specified\" && exit 0",
-    "crawl": "node crawl && node specfix",
+    "crawl": "node crawl && node specfix && node makeIndex",
     "start": "pm2 start ecosystem.config.js --env production --no-daemon",
     "dev": "nodemon ./server.js",
     "glitch:pack": "node ./scripts/glitch",
