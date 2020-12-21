@@ -26,7 +26,6 @@ const renderToString = require('preact-render-to-string');
 const { check, validationResult } = require('express-validator');
 
 const readFile = util.promisify(fs.readFile);
-const fileExists = util.promisify(fs.exists);
 const FeedbackDailyLimit = Number(process.env.FEEDBACK_DAILY_LIMIT || 20);
 const app = express();
 
@@ -78,23 +77,6 @@ function getMessageByError(e) {
 let db = null;
 let css = '';
 let specVersion = '';
-
-function copyObj(o) {
-    return JSON.parse(JSON.stringify(o));
-}
-
-function makeIndex(db) {
-    return db.result.reduce((o, el) => {
-        const names = el.tags.list.slice(0);
-
-        for (const tag of names) {
-            const copyOfEl = copyObj(el);
-            copyOfEl.tags.list = [tag];
-            o[tag] = copyOfEl;
-        }
-        return o;
-    }, {});
-}
 
 function compareVersions(v1, v2) {
     const normalize = p => p.replace(/[a-z]+/g, '');
@@ -300,7 +282,7 @@ queryRouter.get('/include', [
     let childFormatted = child.toLowerCase().trim();
     let parentTag = db[parentFormatted];
     let childTag = db[childFormatted];
-    
+
     if (!parentTag || !childTag) return res.redirect('/');
     if (swap === 'on') {
         [parentTag, childTag] = [childTag, parentTag];
@@ -564,13 +546,12 @@ app.listen(port, async () => {
     try {
         console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
         console.warn('[i] Begin read database');
-        const jsonDb = await readFile('./spec.json');
         css = await readFile('./components/App.css', { encoding: 'utf8' });
         const { styles } = new CleanCSS().minify(css);
         css = styles;
-        const parsedDb = JSON.parse(jsonDb);
-        specVersion = parsedDb.version;
-        db = makeIndex(parsedDb);
+        const specIndex = await readFile('./specindex.json', { encoding: 'utf8' }).then(c => JSON.parse(c));
+        specVersion = specIndex.version;
+        db = specIndex.index;
         console.warn('[i] End of reading database');
         console.warn('[i] Begin read searchstat.json');
         await counter.load();
