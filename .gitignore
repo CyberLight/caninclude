@@ -126,3 +126,5 @@ fakes/
 
 lhci_settings.json
 .lighthouseci
+
+specindex.json
