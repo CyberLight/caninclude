@@ -27,7 +27,7 @@
     --color-fail-bg: hsl(0, 40%, 42%);
     --color-doubt-bg: hsl(49, 58%, 46%);
     --color-green: #67cdcc;
-    
+
     --color-quote-bg: #29475f;
     --color-quote-bg-alt: #f8c555;
     --color-quote-border: #3f6b9c;
@@ -39,6 +39,9 @@
     --color-footer-text: #999;
     --color-footer-bg: #1b1b1b;
     --color-footer-border: var(--color-footer-bg);
+
+    --color-tip-error: #960808;
+    --color-tip-link: #673ab7;
 
     --size-head-font: 24px;
     --size-head-font-big: 48px;
@@ -403,8 +406,16 @@ input {
     background: var(--color-red);
 }
 
+.tip__item--error {
+    color: var(--color-tip-error);
+}
+
 .tip__item {
     margin: 0;
+}
+
+.tip__link {
+    color: var(--color-tip-link);
 }
 
 .about {
@@ -490,6 +501,7 @@ input {
     padding: 1px 8px;
     border: dashed var(--color-text-dark) 2px;
     color: var(--color-text-dark);
+    white-space: nowrap;
 }
 
 .match-section--no {
