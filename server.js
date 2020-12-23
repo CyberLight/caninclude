@@ -7,7 +7,6 @@ const cookieSession = require('cookie-session');
 const { v4: uuidv4 } = require('uuid');
 const CleanCSS = require('clean-css');
 const { html } = require('htm/preact');
-const { Readable } = require('stream');
 const url = require('url');
 const renderToString = require('preact-render-to-string');
 const { check, validationResult } = require('express-validator');
@@ -236,7 +235,8 @@ function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
 function withCatch(cb) {
   return async function catchError(req, res, next) {
     try {
-      return await cb(req, res, next);
+      await cb(req, res, next);
+      return null;
     } catch (e) {
       return next(e);
     }
@@ -444,16 +444,19 @@ adminRouter.get('/feedbacks/:id/unapprove', async (req, res) => {
 
 adminRouter.get('/feedbacks/:id/resolve', async (req, res) => {
   const currentUrl = req.header('Referer') || '/';
+  await feedbackManager.resolve({ id: req.params.id });
   res.redirect(currentUrl);
 });
 
 adminRouter.get('/feedbacks/:id/unresolve', async (req, res) => {
   const currentUrl = req.header('Referer') || '/';
+  await feedbackManager.unresolve({ id: req.params.id });
   res.redirect(currentUrl);
 });
 
 adminRouter.get('/feedbacks/:id/remove', async (req, res) => {
   const currentUrl = req.header('Referer') || '/';
+  await feedbackManager.remove({ id: req.params.id });
   res.redirect(currentUrl);
 });
 
