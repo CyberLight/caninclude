@@ -997,3 +997,69 @@ input {
         align-items: center;
     }
 }
+
+/* Ribbon */
+.lightrope {
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  position: absolute;
+  z-index: 1;
+  margin: -15px 0 0 0;
+  padding: 0;
+  pointer-events: none;
+  width: 100%;
+}
+.lightrope li {
+  position: relative;
+  -webkit-animation-fill-mode: both;
+          animation-fill-mode: both;
+  -webkit-animation-iteration-count: infinite;
+          animation-iteration-count: infinite;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+  width: 12px;
+  height: 28px;
+  border-radius: 50%;
+  margin: 20px;
+  display: inline-block;
+  background: #00f7a5;
+  box-shadow: 0px 4.6666666667px 24px 3px #00f7a5;
+}
+
+.lightrope li:nth-child(2n+1) {
+  background: cyan;
+  box-shadow: 0px 4.6666666667px 24px 3px rgba(0, 255, 255, 0.5);
+}
+
+.lightrope li:nth-child(4n+2) {
+  background: #f70094;
+  box-shadow: 0px 4.6666666667px 24px 3px #f70094;
+}
+
+.lightrope li:before {
+  content: "";
+  position: absolute;
+  background: #222;
+  width: 10px;
+  height: 9.3333333333px;
+  border-radius: 3px;
+  top: -4.6666666667px;
+  left: 1px;
+}
+.lightrope li:after {
+  content: "";
+  top: -14px;
+  left: 9px;
+  position: absolute;
+  width: 52px;
+  height: 18.6666666667px;
+  border-bottom: solid #656363 2px;
+  border-radius: 50%;
+}
+
+.lightrope li:last-child:after {
+  content: none;
+}
