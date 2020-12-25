@@ -26,7 +26,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
     - run: npm run build --if-present
-    - run: npm test
+    - run: npm run crawl && npm test
     - name: "Lighthouse CI step"
       run: |
         echo "{ \"serverBaseUrl\": \"$LHI_URL\", \"token\": \"$LHI_BUILD_KEY\" }" > lhci_settings.json
