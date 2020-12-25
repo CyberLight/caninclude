@@ -53,5 +53,6 @@ RUN apt-get autoremove -y \
 # USER pptruser
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 ENV DEBIAN_FRONTEND=dialog
