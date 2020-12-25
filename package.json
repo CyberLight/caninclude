@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "test": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --steps",
+        "test:ci": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --reporter mocha-junit-reporter --steps",
         "crawl": "node crawl && node specfix && node makeIndex",
         "start": "pm2 start ecosystem.config.js --env production --no-daemon",
         "dev": "nodemon ./server.js",
@@ -64,6 +65,7 @@
         "eslint-config-airbnb-base": "^14.2.1",
         "eslint-plugin-codeceptjs": "^1.3.0",
         "eslint-plugin-import": "^2.22.1",
-        "expect": "^26.6.2"
+        "expect": "^26.6.2",
+        "mocha-junit-reporter": "^2.0.0"
     }
 }

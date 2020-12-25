@@ -134,3 +134,6 @@ testing/output/*
 
 testing/screenshots/diff/*
 !testing/screenshots/diff/.keep
+
+testing/reports/*
+!testing/reports/.keep

@@ -46,7 +46,12 @@ exports.config = {
   // eslint-disable-next-line global-require
   bootstrap: bootstrap.bootstrap,
   teardown: bootstrap.teardown,
-  mocha: {},
+  mocha: {
+    bail: true,
+    reporterOptions: {
+      mochaFile: 'testing/reports/result.xml',
+    },
+  },
   name: 'caninclude',
   plugins: {
     pauseOnFail: {},
