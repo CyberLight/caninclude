@@ -11,6 +11,8 @@ const url = require('url');
 const renderToString = require('preact-render-to-string');
 const { check, validationResult } = require('express-validator');
 
+const AppInTest = process.env.NODE_ENV === 'test';
+
 const {
   Counter,
   LikesManager,
@@ -30,7 +32,7 @@ const readFile = util.promisify(fs.readFile);
 const FeedbackDailyLimit = Number(process.env.FEEDBACK_DAILY_LIMIT || 20);
 const app = express();
 
-const dbConnection = new DbConnection('./.data/sqlite.db');
+const dbConnection = new DbConnection(AppInTest ? ':memory:' : './.data/sqlite.db');
 dbConnection.setup();
 
 const likeManager = new LikesManager(dbConnection);
@@ -461,7 +463,7 @@ adminRouter.get('/feedbacks/:id/remove', async (req, res) => {
 });
 
 function checkHttps(req, res, next) {
-  if (!req.get('X-Forwarded-Proto') || req.get('X-Forwarded-Proto').indexOf('https') != -1) {
+  if (!req.get('X-Forwarded-Proto') || req.get('X-Forwarded-Proto').indexOf('https') !== -1) {
     return next();
   }
   return res.redirect(`https://${req.hostname}${req.url}`);
@@ -472,8 +474,10 @@ async function countRequests(req, res, next) {
   const {
     like, dislike, unlike, undislike,
   } = req.query;
-  // eslint-disable-next-line no-console
-  console.log(req.url, ip.split(',')[0], req.session.role || 'norole', req.session.user || 'anonymous');
+  if (!AppInTest) {
+    // eslint-disable-next-line no-console
+    console.log(req.url, ip.split(',')[0], req.session.role || 'norole', req.session.user || 'anonymous');
+  }
   if ([like, dislike, unlike, undislike].some((x) => typeof x !== 'undefined')) return next();
   await counter.register(ip.split(',')[0]);
   return next();
@@ -588,36 +592,45 @@ app.use(async (err, req, res, next) => {
     twoWeeksStatTotalCount: statManager.totalCount,
   };
 
-  streamPage(res, html`<${ErrorPage} request="${request}"/>`, css);
+  return streamPage(res, html`<${ErrorPage} request="${request}"/>`, css);
 });
 
-app.listen(port, async () => {
-  try {
-    // eslint-disable-next-line no-console
-    console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
-    // eslint-disable-next-line no-console
-    console.warn('[i] Begin read database');
-    css = await readFile('./components/App.css', { encoding: 'utf8' });
-    const { styles } = new CleanCSS().minify(css);
-    css = styles;
-    const specIndex = await readFile('./specindex.json', { encoding: 'utf8' }).then((c) => JSON.parse(c));
-    specVersion = specIndex.version;
-    keywordsMapping = specIndex.keywordsMapping;
-    db = specIndex.index;
-    // eslint-disable-next-line no-console
-    console.warn('[i] End of reading database');
-    // eslint-disable-next-line no-console
-    console.warn('[i] Begin read searchstat.json');
-    await counter.load();
-    // eslint-disable-next-line no-console
-    console.warn('[i] End of reading searchstat.json');
-    // eslint-disable-next-line no-console
-    console.log(`Example app listening at http://localhost:${port}`);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn(e.message);
-  }
-});
+function start(appPort) {
+  return new Promise((resolve) => {
+    const server = app.listen(appPort, async () => {
+      try {
+        // eslint-disable-next-line no-console
+        console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
+        // eslint-disable-next-line no-console
+        console.warn('[i] Begin read database');
+        css = await readFile('./components/App.css', { encoding: 'utf8' });
+        const { styles } = new CleanCSS().minify(css);
+        css = styles;
+        const specIndex = await readFile('./specindex.json', { encoding: 'utf8' }).then((c) => JSON.parse(c));
+        specVersion = specIndex.version;
+        keywordsMapping = specIndex.keywordsMapping;
+        db = specIndex.index;
+        // eslint-disable-next-line no-console
+        console.warn('[i] End of reading database');
+        // eslint-disable-next-line no-console
+        console.warn('[i] Begin read searchstat.json');
+        await counter.load();
+        // eslint-disable-next-line no-console
+        console.warn('[i] End of reading searchstat.json');
+        // eslint-disable-next-line no-console
+        console.log(`[caninclude app] listening at http://localhost:${port}`);
+        resolve(server);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn(e.message);
+      }
+    });
+  });
+}
+
+async function resetConnection() {
+  await dbConnection.reset();
+}
 
 process.on('SIGINT', () => {
   if (dbConnection) {
@@ -632,3 +645,13 @@ process.on('SIGINT', () => {
     });
   }
 });
+
+if (require.main === module) {
+  start(port);
+} else {
+  module.exports = {
+    start,
+    getConnection: () => dbConnection,
+    resetConnection,
+  };
+}
