@@ -24,9 +24,30 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+    - name: Install npm packages
+      run: |
+        npm install
+        npm run build --if-present
+      env:
+        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
+    - name: Run e2e test
+      run: npm run crawl && npm run test:ci
+      env:
+        PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
+    - name: Publish Unit Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v1.6
+      if: always()
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        files: testing/reports/**/*.xml
+    - name: "Archive tests artifacts"
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: e2e-artifacts
+        path: |
+          testing/output
+          testing/reports/**/*.xml
     - name: "Lighthouse CI step"
       run: |
         echo "{ \"serverBaseUrl\": \"$LHI_URL\", \"token\": \"$LHI_BUILD_KEY\" }" > lhci_settings.json

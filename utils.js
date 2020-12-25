@@ -1,6 +1,7 @@
 const events = require('events');
 const sqlite3 = require("sqlite3").verbose();
 const md5 = require('md5');
+const { resolve } = require('path');
 const util = require('util');
 
 class Scheduler {
@@ -51,8 +52,19 @@ function shortenNumber(n, d) {
 class DbConnection {
     constructor(dbFile = "./.data/sqlite.db") {
         this.dbFile = dbFile;
-        this.database = new sqlite3.Database(dbFile);
-        this.close = util.promisify(this.database.close).bind(this.database);
+        this.isOpen = false;
+        this.initConnection();
+    }
+
+    initConnection() {
+      this.database = new sqlite3.Database(this.dbFile);
+      this.database.on('open', () => {
+        this.isOpen = true;
+      });
+      this.database.on('close', () => {
+        this.isOpen = false;
+      });
+      this.close = util.promisify(this.database.close).bind(this.database);
     }
 
     setup() {
@@ -186,23 +198,46 @@ class DbConnection {
             `);
         });
     }
+
+    set onUpdate (cb) {
+      this.onUpdateCallback = cb;
+    }
+
+    async reset() {
+      if(this.isOpen) {
+        await this.close();
+        this.database = new sqlite3.Database(this.dbFile);
+        this.initConnection();
+        this.setup();
+        if (typeof this.onUpdateCallback === 'function') {
+          this.onUpdateCallback();
+        }
+      }
+    }
 }
 
 class DbManager {
-    constructor(conn) {
-        this.conn = conn;
-        this.getAsync = util.promisify(this.db.get).bind(this.db);
-        this.allAsync = util.promisify(this.db.all).bind(this.db);
-        this.runAsync = util.promisify(this.db.run).bind(this.db);
-    }
+  constructor(conn) {
+    this.conn = conn;
+    this.conn.onUpdate = () => {
+      this.bindMethods();
+    };
+    this.bindMethods();
+  }
 
-    get db() {
-        return this.conn.database;
-    }
+  bindMethods() {
+    this.getAsync = util.promisify(this.db.get).bind(this.db);
+    this.allAsync = util.promisify(this.db.all).bind(this.db);
+    this.runAsync = util.promisify(this.db.run).bind(this.db);
+  }
 
-    runOneByOne(cb) {
-        this.conn.database.serialize(cb);
-    }
+  get db() {
+    return this.conn.database;
+  }
+
+  runOneByOne(cb) {
+    this.db.serialize(cb);
+  }
 }
 
 class DailyFeedbackExceededError extends Error {
@@ -216,8 +251,8 @@ class FeedbackManager extends DbManager {
         return new Promise((resolve, reject) => {
             if (limit === 0) reject(new DailyFeedbackExceededError());
             this.db.get(
-                `SELECT COUNT(id) as count FROM feedbacks WHERE date(created)=?`, 
-                [new Date().toISOString().substring(0, 10)], 
+                `SELECT COUNT(id) as count FROM feedbacks WHERE date(created)=?`,
+                [new Date().toISOString().substring(0, 10)],
                 (err, row) => {
                     if (err) {
                         return reject(err);
@@ -234,9 +269,9 @@ class FeedbackManager extends DbManager {
     countByTags({ parent, child }) {
         return new Promise((resolve, reject) => {
             this.db.get(
-                `SELECT COUNT(id) as count 
-                FROM feedbacks WHERE 
-                parent=? AND 
+                `SELECT COUNT(id) as count
+                FROM feedbacks WHERE
+                parent=? AND
                 child=?;`,
                 [parent, child],
                 (err, row) => {
@@ -277,10 +312,10 @@ class FeedbackManager extends DbManager {
     getLastFeedbacks({ user, parent, child }) {
         return new Promise((resolve, reject) => {
             this.db.all(`
-            SELECT * FROM feedbacks WHERE 
-            user=? AND 
-            parent=? AND 
-            child=? 
+            SELECT * FROM feedbacks WHERE
+            user=? AND
+            parent=? AND
+            child=?
             ORDER BY created DESC
             LIMIT 10`,
                 [user, parent, child],
@@ -356,7 +391,7 @@ class LikesManager extends DbManager {
         });
     }
 
-    async getLikeSafe(user, parent, child, defaultValue = {}) { 
+    async getLikeSafe(user, parent, child, defaultValue = {}) {
         try {
             return await this.getLike(user, parent, child);
         } catch(e) {
@@ -441,8 +476,8 @@ class Counter extends DbManager {
     async getBy({ key, date }) {
         return new Promise((resolve, reject) => {
             this.db.get(
-                'SELECT key, count FROM counters WHERE key=? AND created=?', 
-                [key, date.toISOString().slice(0,10)], 
+                'SELECT key, count FROM counters WHERE key=? AND created=?',
+                [key, date.toISOString().slice(0,10)],
                 function (err, row) {
                     if (err) {
                         return reject(err);
@@ -469,11 +504,11 @@ class Counter extends DbManager {
     async update({ key }) {
         return new Promise((resolve, reject) => {
             this.db.run(
-                'UPDATE counters SET count=count+1 WHERE key=? AND created=?', 
+                'UPDATE counters SET count=count+1 WHERE key=? AND created=?',
                 [
-                    key, 
+                    key,
                     new Date().toISOString().slice(0, 10)
-                ], 
+                ],
                 function (err) {
                     if (err) {
                         return reject(err);
@@ -554,8 +589,8 @@ class HistoryManager extends DbManager {
     async create({ parent, child, canInclude}) {
         return new Promise((resolve, reject) => {
             this.db.run(
-                'INSERT INTO history(parent, child, canInclude, count) VALUES(?,?,?,1)', 
-                [parent, child, canInclude.toLowerCase()], 
+                'INSERT INTO history(parent, child, canInclude, count) VALUES(?,?,?,1)',
+                [parent, child, canInclude.toLowerCase()],
                 function (err) {
                     if (err) {
                         return reject(err);
@@ -602,7 +637,7 @@ class InvitesManager extends DbManager {
         if (!result) {
             throw new RecordNotFoundError();
         }
-        await this.runAsync(`UPDATE invites SET user=?, used=1 WHERE key=?`, [user, key]);    
+        await this.runAsync(`UPDATE invites SET user=?, used=1 WHERE key=?`, [user, key]);
         return this.getAsync(`SELECT * FROM invites WHERE key=? AND used=1`, [key]);
     }
 }
@@ -624,7 +659,7 @@ class StatManager extends DbManager {
                 const { maximum } = await this.getAsync('SELECT MAX(count) as maximum from (SELECT COUNT(id) as count FROM counters c2 GROUP BY c2.created)');
                 this.maxUniqCount = maximum;
                 this.cacheValues = await this.allAsync(`SELECT curr.count as nowCount, prev.count as prevCount, curr.dayofweek FROM
-        (SELECT COUNT(id) as count, c2.created, 
+        (SELECT COUNT(id) as count, c2.created,
         case cast (strftime('%w', c2.created) as integer)
             when 0 then 'Su'
             when 1 then 'Mo'
@@ -632,14 +667,14 @@ class StatManager extends DbManager {
             when 3 then 'We'
             when 4 then 'Th'
             when 5 then 'Fr'
-            else 'Sa' 
-        end as dayofweek 
-        FROM counters c2 
-        WHERE c2.created >= date('${shortDateNow}', '-13 days') 
-        AND c2.created <= date('${shortDateNow}', '-7 days') 
+            else 'Sa'
+        end as dayofweek
+        FROM counters c2
+        WHERE c2.created >= date('${shortDateNow}', '-13 days')
+        AND c2.created <= date('${shortDateNow}', '-7 days')
         GROUP BY c2.created ORDER BY c2.created) as prev
-        LEFT JOIN  
-        (SELECT COUNT(id) as count, c2.created, 
+        LEFT JOIN
+        (SELECT COUNT(id) as count, c2.created,
         case cast (strftime('%w', c2.created) as integer)
             when 0 then 'Su'
             when 1 then 'Mo'
@@ -647,11 +682,11 @@ class StatManager extends DbManager {
             when 3 then 'We'
             when 4 then 'Th'
             when 5 then 'Fr'
-            else 'Sa' 
-        end as dayofweek 
-        FROM counters c2 
-        WHERE c2.created >= date('${shortDateNow}', '-6 days') 
-        AND c2.created <= '${shortDateNow}' 
+            else 'Sa'
+        end as dayofweek
+        FROM counters c2
+        WHERE c2.created >= date('${shortDateNow}', '-6 days')
+        AND c2.created <= '${shortDateNow}'
         GROUP BY c2.created ORDER BY c2.created) as curr
         ON curr.dayofweek = prev.dayofweek`
                 );

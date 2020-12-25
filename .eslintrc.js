@@ -6,6 +6,7 @@ module.exports = {
   },
   extends: [
     'airbnb-base',
+    'plugin:codeceptjs/recommended',
   ],
   parserOptions: {
     ecmaVersion: 12,

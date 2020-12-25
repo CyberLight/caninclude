@@ -128,3 +128,12 @@ lhci_settings.json
 .lighthouseci
 
 specindex.json
+
+testing/output/*
+!testing/output/.keep
+
+testing/screenshots/diff/*
+!testing/screenshots/diff/.keep
+
+testing/reports/*
+!testing/reports/.keep
