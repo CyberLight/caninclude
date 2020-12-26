@@ -30,14 +30,16 @@ jobs:
         npm run build --if-present
       env:
         PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
-    - name: Run e2e test
+    - name: Run e2e tests
       run: npm run crawl && npm run test:ci
       env:
         PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
-    - name: Publish Unit Test Results
+    - name: Publish e2e tests report in xunit/junit xml format
       uses: EnricoMi/publish-unit-test-result-action@v1.6
       if: always()
       with:
+        check_name: e2e tests results
+        comment_title: e2e tests statistics
         github_token: ${{ secrets.GITHUB_TOKEN }}
         files: testing/reports/**/*.xml
     - name: "Archive tests artifacts"
@@ -48,6 +50,7 @@ jobs:
         path: |
           testing/output
           testing/reports/**/*.xml
+          testing/screenshots
     - name: "Lighthouse CI step"
       run: |
         echo "{ \"serverBaseUrl\": \"$LHI_URL\", \"token\": \"$LHI_BUILD_KEY\" }" > lhci_settings.json
