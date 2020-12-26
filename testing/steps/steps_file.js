@@ -16,5 +16,9 @@ module.exports = function customSteps() {
       const locatorText = await this.grabTextFrom(locator);
       expect(locatorText).toStrictEqual(expected);
     },
+    async checkTableRow(rowLocator, expected) {
+      const actualRowValues = await this.grabTextFromAll(rowLocator).then((row) => row.map((s) => s.split('\t')));
+      expect(actualRowValues).toStrictEqual(expected);
+    },
   });
 };

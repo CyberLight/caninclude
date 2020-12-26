@@ -14,3 +14,11 @@ Data(quickItems)
     I.saveElementScreenshot(MainPage.tables.row(1), current.image);
     I.seeVisualDiff(current.image, { tolerance: 0, prepareBaseImage: false });
   }).tag('@db');
+
+Scenario('Max rows in last quick results table', async ({ I }) => {
+  const MaxCountOfRows = 10;
+  const rows = await I.haveANumberOfHistoryItemsInDb(20);
+  MainPage.amOnPage();
+  I.seeNumberOfVisibleElements(MainPage.tables.rows, MaxCountOfRows);
+  await I.checkTableRow(MainPage.tables.row(1), MainPage.helpers.getLastRow(rows, ['result']));
+}).tag('@db');
