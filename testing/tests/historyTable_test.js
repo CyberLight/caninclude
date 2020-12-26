@@ -10,9 +10,7 @@ quickItems.add([{ child: 'img', parent: 'a', canInclude: 'doubt' }, 'img_a_doubt
 Data(quickItems)
   .Scenario('10 quick results pair single item with different status yes|no|doubt', ({ I, current }) => {
     I.haveHistoryItemInDb(current.item);
-    I.amOnPage('/');
-    I.waitForVisible(MainPage.labels.head);
-    I.seeTextEquals('Can I Include*', MainPage.labels.head);
+    MainPage.amOnPage();
     I.saveElementScreenshot(MainPage.tables.row(1), current.image);
     I.seeVisualDiff(current.image, { tolerance: 0, prepareBaseImage: false });
   }).tag('@db');
