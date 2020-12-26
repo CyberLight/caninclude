@@ -40,5 +40,12 @@ module.exports = {
       I.click(this.labels.swap);
     }
   },
+  helpers: {
+    getLastRow(rows, addValues = []) {
+      return rows.slice(-1).map((r) => (
+        [r.child, r.parent, r.canInclude, String(r.count), ...addValues]
+      ));
+    },
+  },
   // insert your locators and methods here
 };
