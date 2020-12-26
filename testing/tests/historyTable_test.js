@@ -1,4 +1,4 @@
-const { MainPage } = inject();
+const { MainPage, CommonPage } = inject();
 
 Feature('mainPage > historyTable');
 
@@ -21,4 +21,11 @@ Scenario('Max rows in last quick results table', async ({ I }) => {
   MainPage.amOnPage();
   I.seeNumberOfVisibleElements(MainPage.tables.rows, MaxCountOfRows);
   await I.checkTableRow(MainPage.tables.row(1), MainPage.helpers.getLastRow(rows, ['result']));
+}).tag('@db');
+
+Scenario('Can follow by "result" link', async ({ I }) => {
+  const [row] = await I.haveANumberOfHistoryItemsInDb(1);
+  MainPage.amOnPage();
+  I.click(MainPage.tables.resultLink(1));
+  I.seeInCurrentUrl(CommonPage.helpers.detailUrl(row));
 }).tag('@db');

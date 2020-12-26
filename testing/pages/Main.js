@@ -13,6 +13,9 @@ module.exports = {
     row(index) {
       return locate(this.rows).at(index);
     },
+    resultLink(index) {
+      return locate('a.table__link').at(index);
+    },
   },
   counters: {
     requests: locate('p.counter').inside('footer'),
