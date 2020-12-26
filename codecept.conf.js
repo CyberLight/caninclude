@@ -42,6 +42,7 @@ exports.config = {
   include: {
     I: './testing/steps/steps_file.js',
     MainPage: './testing/pages/Main.js',
+    CommonPage: './testing/pages/Common.js',
   },
   // eslint-disable-next-line global-require
   bootstrap: bootstrap.bootstrap,
