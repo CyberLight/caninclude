@@ -20,5 +20,16 @@ module.exports = function customSteps() {
       const actualRowValues = await this.grabTextFromAll(rowLocator).then((row) => row.map((s) => s.split('\t')));
       expect(actualRowValues).toStrictEqual(expected);
     },
+    async checkSessionCookieContent() {
+      this.seeCookie('session.sig');
+      this.seeCookie('session');
+      const sessionCookie = await this.grabCookie('session');
+      const jsonString = Buffer.from(sessionCookie.value, 'base64').toString();
+      const sessionObj = JSON.parse(jsonString);
+      expect(sessionObj).toEqual(expect.objectContaining({
+        user: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+        userAcceptCookie: expect.any(Boolean),
+      }));
+    },
   });
 };
