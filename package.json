@@ -29,7 +29,8 @@
         "codeceptjs": "codeceptjs run --steps",
         "codeceptjs:headless": "HEADLESS=true codeceptjs run --steps",
         "codeceptjs:ui": "codecept-ui --app",
-        "cc:tools": "codeceptjs --"
+        "cc:tools": "codeceptjs --",
+        "cc:def": "codeceptjs def"
     },
     "keywords": [],
     "author": "",
