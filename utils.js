@@ -55,6 +55,7 @@ class DbConnection {
         this.dbFile = dbFile;
         this.isOpen = false;
         this.initConnection();
+        this.resetCallbacks = [];
     }
 
     initConnection() {
@@ -201,7 +202,7 @@ class DbConnection {
     }
 
     set onUpdate (cb) {
-      this.onUpdateCallback = cb;
+      this.resetCallbacks.push(cb);
     }
 
     async reset() {
@@ -210,8 +211,8 @@ class DbConnection {
         this.database = new sqlite3.Database(this.dbFile);
         this.initConnection();
         this.setup();
-        if (typeof this.onUpdateCallback === 'function') {
-          this.onUpdateCallback();
+        if (this.resetCallbacks.length) {
+          this.resetCallbacks.map(cb => typeof cb === 'function' && cb())
         }
       }
     }
@@ -713,6 +714,9 @@ class CronDbManger extends DbManager {
     this.cron = new CronJob({ cronTime, onTick, runOnInit: true, ...otherConfigProps });
     this.cron.start();
   }
+  stopCronJob() {
+    this.cron.stop();
+  }
 }
 
 class SimpleRecommendManager extends CronDbManger {
@@ -724,6 +728,9 @@ class SimpleRecommendManager extends CronDbManger {
         this.cache = {};
       }
     });
+    this.conn.onUpdate = () => {
+      this.stopCronJob();
+    };
     this.cache = {};
   }
 
