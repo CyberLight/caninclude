@@ -1,8 +1,9 @@
 const events = require('events');
 const sqlite3 = require("sqlite3").verbose();
 const md5 = require('md5');
-const { resolve } = require('path');
 const util = require('util');
+
+const CronJob = require('cron').CronJob;
 
 class Scheduler {
     constructor(trackPeriodInMs = 2 * 1000 * 60) {
@@ -707,6 +708,43 @@ function getBarCssByValues(left, right, total) {
     }
 }
 
+class CronDbManger extends DbManager {
+  startCronJob({ cronTime, onTick, ...otherConfigProps }) {
+    this.cron = new CronJob({ cronTime, onTick, runOnInit: true, ...otherConfigProps });
+    this.cron.start();
+  }
+}
+
+class SimpleRecommendManager extends CronDbManger {
+  constructor(conn) {
+    super(conn);
+    this.startCronJob({
+      cronTime: process.env.RECOMMEND_CLEAR_CACHE_CRON_TIME || '0 */30 * * * *',
+      onTick: () => {
+        this.cache = {};
+      }
+    });
+    this.cache = {};
+  }
+
+  async getFromCacheOrQuery(childTagName, parentTagName) {
+    const cacheKey = `${childTagName}${parentTagName}`;
+    if (typeof this.cache[cacheKey] !== 'undefined') {
+      return this.cache[cacheKey];
+    }
+
+    const record = await this.getAsync(`
+      select child, parent, count, (julianday('now') - julianday(updatedAt)) / 365 as attenuation_factor
+      from history
+      where child=? order by attenuation_factor ASC, count DESC LIMIT 1`,
+      [parentTagName]);
+
+    this.cache[cacheKey] = record;
+
+    return record;
+  }
+}
+
 module.exports.StatManager = StatManager;
 module.exports.Scheduler = Scheduler;
 module.exports.Counter = Counter;
@@ -718,3 +756,4 @@ module.exports.HistoryManager = HistoryManager;
 module.exports.InvitesManager = InvitesManager;
 module.exports.RecordNotFoundError = RecordNotFoundError;
 module.exports.getBarCssByValues = getBarCssByValues;
+module.exports.SimpleRecommendManager = SimpleRecommendManager;
