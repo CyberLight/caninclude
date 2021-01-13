@@ -11,6 +11,7 @@ const NewFeedback = require('./NewFeedback');
 const TagFeedbacks = require('./TagFeedbacks');
 const Ribbon = require('./Ribbon');
 const Main = require('./Main');
+const Recommends = require('./Recommends');
 
 class App extends Component {
   // eslint-disable-next-line class-methods-use-this
@@ -28,6 +29,7 @@ class App extends Component {
     feedback,
     feedbacks,
     canAddFeedback,
+    recommendResult,
   }) {
     const hasTags = tags.length > 0;
     return html`
@@ -35,6 +37,7 @@ class App extends Component {
                 ${!userAcceptCookie && html`<${CookieConsent}/>`}
                 ${!hasTags && html`<${Ribbon} />`}
                 <main class="content">
+                    <${Recommends} recommendation="${recommendResult}" />
                     <${Tips} tips="${tips}"/>
                     <${NewFeedback} request="${request}" form="${form}" show="${showFeedback}"/>
                     <${TagFeedbacks} request="${request}" feedbacks="${feedbacks}" show="${showFeedbacks}" />
