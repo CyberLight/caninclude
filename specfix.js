@@ -9,7 +9,7 @@ const keywordsMapping = {};
   const specContent = await readFile('./spec.json');
   const specJson = JSON.parse(specContent);
 
-  function processNegative(section) {
+  function process(section) {
     const negativeKeywords = [];
     const conditionalKeywords = [];
 
@@ -20,8 +20,10 @@ const keywordsMapping = {};
       // eslint-disable-next-line no-restricted-syntax
       for (const element of obj.elements) {
         if (typeof element === 'string') {
-          prevNegative = /(\b(No|no|not|Not)\b(?! (more than one)))/.test(element) || (prevNegative && (/(\b(and|or)\b)/.test(element) || /,/.test(element)));
-          prevCondition = /(\b(If|if|unless)\b)/.test(element) || (prevCondition && (/(\b(and|or)\b)/.test(element) || /,/.test(element)));
+          const canContinue = /,/.test(element) && !/./.test(element);
+          const hasOrAnd = /(\b(and|or)\b)/.test(element);
+          prevNegative = /(\b([Nn]o|[Nn]ot)\b(?! (more than one)))/.test(element) || (prevNegative && (hasOrAnd || canContinue));
+          prevCondition = /(\b([Ii]f|[Uu]nless)\b)/.test(element) || (prevCondition && (hasOrAnd || canContinue));
         } else {
           keywordsMapping[element.hashText] = element;
           if (prevNegative) {
@@ -43,15 +45,15 @@ const keywordsMapping = {};
   const processed = specJson.result.map((tag) => {
     // eslint-disable-next-line no-param-reassign
     tag.props.sections = tag.props.sections || {};
-    let sectionProps = processNegative(tag.props.Categories);
+    let sectionProps = process(tag.props.Categories);
     // eslint-disable-next-line no-param-reassign
     tag.props.sections.Categories = sectionProps;
 
-    sectionProps = processNegative(tag.props.ContentModel);
+    sectionProps = process(tag.props.ContentModel);
     // eslint-disable-next-line no-param-reassign
     tag.props.sections.ContentModel = sectionProps;
     return tag;
   });
 
-  await writeFile('./spec.json', JSON.stringify({ version: specJson.version, keywordsMapping, result: processed }, ' ', 2));
+  await writeFile('./spec_fixed.json', JSON.stringify({ version: specJson.version, keywordsMapping, result: processed }, ' ', 2));
 }());
