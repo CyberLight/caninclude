@@ -1,8 +1,9 @@
 const events = require('events');
 const sqlite3 = require("sqlite3").verbose();
 const md5 = require('md5');
-const { resolve } = require('path');
 const util = require('util');
+
+const CronJob = require('cron').CronJob;
 
 class Scheduler {
     constructor(trackPeriodInMs = 2 * 1000 * 60) {
@@ -54,6 +55,8 @@ class DbConnection {
         this.dbFile = dbFile;
         this.isOpen = false;
         this.initConnection();
+        this.resetCallbacks = [];
+        this.closeCallbacks = [];
     }
 
     initConnection() {
@@ -64,7 +67,7 @@ class DbConnection {
       this.database.on('close', () => {
         this.isOpen = false;
       });
-      this.close = util.promisify(this.database.close).bind(this.database);
+      this.asyncClose = util.promisify(this.database.close).bind(this.database);
     }
 
     setup() {
@@ -200,7 +203,30 @@ class DbConnection {
     }
 
     set onUpdate (cb) {
-      this.onUpdateCallback = cb;
+      this.resetCallbacks.push(cb);
+    }
+
+    set onClose(cb) {
+      this.closeCallbacks.push(cb);
+    }
+
+    callResetCallbacks() {
+      if (this.resetCallbacks.length) {
+        this.resetCallbacks.map(cb => typeof cb === 'function' && cb())
+      }
+    }
+
+    callCloseCallbacks() {
+      if (this.closeCallbacks.length) {
+        this.closeCallbacks.map(cb => typeof cb === 'function' && cb())
+      }
+    }
+
+    async close() {
+      if (this.isOpen) {
+        await this.asyncClose();
+      }
+      this.callCloseCallbacks();
     }
 
     async reset() {
@@ -209,9 +235,7 @@ class DbConnection {
         this.database = new sqlite3.Database(this.dbFile);
         this.initConnection();
         this.setup();
-        if (typeof this.onUpdateCallback === 'function') {
-          this.onUpdateCallback();
-        }
+        this.callResetCallbacks();
       }
     }
 }
@@ -707,6 +731,65 @@ function getBarCssByValues(left, right, total) {
     }
 }
 
+class CronDbManager extends DbManager {
+  startCronJob({ cronTime, onTick, ...otherConfigProps }) {
+    if (!this.cron) {
+      this.cron = new CronJob({ cronTime, onTick, runOnInit: true, ...otherConfigProps });
+      this.cron.start();
+    }
+  }
+  stopCronJob() {
+    if (this.cron) {
+      this.cron.stop();
+      this.cron = null;
+    }
+  }
+}
+
+class SimpleRecommendManager extends CronDbManager {
+  constructor(conn) {
+    super(conn);
+    this.conn.onUpdate = () => this.restart();
+    this.conn.onClose = () => this.stop();
+    this.cache = {};
+  }
+
+  start() {
+    this.startCronJob({
+      cronTime: process.env.RECOMMEND_CLEAR_CACHE_CRON_TIME || '0 */30 * * * *',
+      onTick: () => {
+        this.cache = {};
+      }
+    });
+  }
+
+  stop() {
+    this.stopCronJob();
+  }
+
+  restart() {
+    this.stop();
+    this.start();
+  }
+
+  async getFromCacheOrQuery(childTagName, parentTagName) {
+    const cacheKey = `${childTagName}${parentTagName}`;
+    if (typeof this.cache[cacheKey] !== 'undefined') {
+      return this.cache[cacheKey];
+    }
+
+    const record = await this.getAsync(`
+      select child, parent, count, (julianday('now') - julianday(created)) / 365 as attenuation_factor
+      from history
+      where child=? order by attenuation_factor ASC, count DESC LIMIT 1`,
+      [parentTagName]);
+
+    this.cache[cacheKey] = record;
+
+    return record;
+  }
+}
+
 module.exports.StatManager = StatManager;
 module.exports.Scheduler = Scheduler;
 module.exports.Counter = Counter;
@@ -718,3 +801,4 @@ module.exports.HistoryManager = HistoryManager;
 module.exports.InvitesManager = InvitesManager;
 module.exports.RecordNotFoundError = RecordNotFoundError;
 module.exports.getBarCssByValues = getBarCssByValues;
+module.exports.SimpleRecommendManager = SimpleRecommendManager;

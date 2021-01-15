@@ -1,15 +1,15 @@
 const { start } = require('../../server');
 
-let server = null;
+let stop = null;
 
 module.exports = {
   // adding bootstrap/teardown
   async bootstrap() {
-    server = await start(3000, true);
+    stop = await start(3000, true);
   },
   async teardown() {
-    if (server) {
-      server.close();
+    if (typeof stop === 'function') {
+      await stop();
     }
   },
   // ...

@@ -5,7 +5,7 @@ function copyObj(o) {
 }
 
 (async function start() {
-  const parsedDb = await fs.readFile('./spec.json').then((c) => JSON.parse(c));
+  const parsedDb = await fs.readFile('./spec_fixed.json').then((c) => JSON.parse(c));
   const { version } = parsedDb;
   const { keywordsMapping } = parsedDb;
   const dbIndex = parsedDb.result.reduce((o, el) => {

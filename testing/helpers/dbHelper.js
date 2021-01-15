@@ -63,15 +63,26 @@ class DbHelper extends Helper {
 
   // eslint-disable-next-line class-methods-use-this
   async haveHistoryItemInDb({
-    parent, child, canInclude, count = 1,
+    parent, child, canInclude, count = 1, created = Date.now(),
   } = {}) {
     const con = promisifyConnection(getConnection());
     const lastId = await con.run(
-      'INSERT INTO history(parent, child, canInclude, count) VALUES(?,?,?,?)',
-      [parent, child, canInclude.toLowerCase(), count],
+      'INSERT INTO history(parent, child, canInclude, count, created) VALUES(?,?,?,?,?)',
+      [parent, child, canInclude.toLowerCase(), count, created],
     );
     const row = await con.get('SELECT * FROM history WHERE id = ?', [lastId]);
     return row;
+  }
+
+  async haveHistoryItemsInDb(items) {
+    const results = [];
+    // eslint-disable-next-line no-restricted-syntax
+    for (const item of items) {
+      // eslint-disable-next-line no-await-in-loop
+      const row = await this.haveHistoryItemInDb(item);
+      results.push(row);
+    }
+    return results;
   }
 
   async haveANumberOfHistoryItemsInDb(count) {

@@ -6,6 +6,7 @@
     "scripts": {
         "test": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --steps",
         "test:ci": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --reporter mocha-junit-reporter --steps",
+        "spec:fix": "node specfix && node makeIndex",
         "crawl": "node crawl && node specfix && node makeIndex",
         "start": "pm2 start ecosystem.config.js --env production --no-daemon",
         "dev": "nodemon ./server.js",
@@ -30,6 +31,7 @@
         "codeceptjs:headless": "HEADLESS=true codeceptjs run --steps",
         "codeceptjs:ui": "codecept-ui --app",
         "cc:tools": "codeceptjs --",
+        "cc:gt": "codeceptjs gt",
         "cc:def": "codeceptjs def"
     },
     "keywords": [],
@@ -42,6 +44,7 @@
         "archiver": "^4.0.1",
         "clean-css": "^4.2.3",
         "cookie-session": "^1.4.0",
+        "cron": "^1.8.2",
         "express": "^4.17.1",
         "express-validator": "^6.4.1",
         "htm": "^3.0.4",

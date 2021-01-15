@@ -22,6 +22,7 @@ const {
   InvitesManager,
   RecordNotFoundError,
   StatManager,
+  SimpleRecommendManager,
 } = require('./utils');
 
 const App = require('./components/App');
@@ -41,6 +42,7 @@ const counter = new Counter(dbConnection);
 const historyManager = new HistoryManager(dbConnection);
 const invitesManager = new InvitesManager(dbConnection);
 const statManager = new StatManager(dbConnection);
+const recommendManager = new SimpleRecommendManager(dbConnection);
 
 const port = process.env.PORT || 3000;
 let db = null;
@@ -70,7 +72,7 @@ const messages = {
     return `The parent <b>Content Model</b> section contains only conditional statements. Please check if the child tag <b>&lt;${childFormatted}/&gt;</b> matches the conditions of the parent <b>&lt;${parentFormatted}/&gt;</b>, and make a decision based on this.`;
   },
   makeMatched(matched, parentFormatted, childFormatted, negative) {
-    return `The parent tag <b>&lt;${parentFormatted}/&gt;</b> with the <b>Content model</b> section and the child tag <b>&lt;${childFormatted}/&gt;</b> with the <b>Categories</b> section have matches: ${matched.map((match) => markMatched(negative, match))}`;
+    return `The parent tag <b>&lt;${parentFormatted}/&gt;</b> with the <b>Content model</b> section and the child tag <b>&lt;${childFormatted}/&gt;</b> with the <b>Categories</b> section have matches: ${matched.map((match) => markMatched(negative, match)).join(', ')}`;
   },
   makeFail(matched, parentFormatted, childFormatted, negative, conditional) {
     const hasMatches = matched && matched.length;
@@ -79,9 +81,9 @@ const messages = {
     const showNoMatch = !hasMatches && !hasNegative && !hasConditional;
 
     return `The parent tag <b>&lt;${parentFormatted}/&gt;</b> with the <b>Content model</b> section and the child tag <b>&lt;${childFormatted}/&gt;</b> with the <b>Categories</b> ${
-      (hasMatches && `section have matches: ${matched.map((match) => markMatched(negative, match))}`) || ''
-    } ${(hasMatches && 'and') || ''} ${(hasNegative && `have <b>negative matches</b>: ${[...negative].map((negativeMatch) => markMatched(negative, negativeMatch))}`) || ''}
-    ${(hasConditional && 'but') || ''} ${(hasConditional && ` if it is the element from ${[...conditional].map((conditionalItem) => markMatched(negative, conditionalItem))} then you <b>can include</b>`) || ''} ${(showNoMatch && 'have no matches!') || ''}`;
+      (hasMatches && `section have matches: ${matched.map((match) => markMatched(negative, match)).join(', ')}`) || ''
+    } ${(hasMatches && 'and') || ''} ${(hasNegative && `have <b>negative matches</b>: ${[...negative].map((negativeMatch) => markMatched(negative, negativeMatch)).join(', ')}`) || ''}
+    ${(hasConditional && 'but') || ''} ${(hasConditional && ` if it is the element from ${[...conditional].map((conditionalItem) => markMatched(negative, conditionalItem)).join(', ')} then you <b>can include</b>`) || ''} ${(showNoMatch && 'have no matches!') || ''}`;
   },
 };
 
@@ -390,6 +392,10 @@ queryRouter.get('/include', [
 
   const queryParams = { user, parent: parentFormatted, child: childFormatted };
   const twoWeeksStat = await statManager.getStatCountersFor2Weeks();
+  const recommendResult = await recommendManager.getFromCacheOrQuery(
+    childFormatted,
+    parentFormatted,
+  );
 
   const props = {
     form: { parent: parentFormatted, result, child: childFormatted },
@@ -413,6 +419,7 @@ queryRouter.get('/include', [
     },
     feedbacks: await feedbackManager.getLastFeedbacks(queryParams),
     canAddFeedback,
+    recommendResult,
   };
 
   streamPage(res, html`<${App} ...${props}/>`, css);
@@ -595,10 +602,11 @@ app.use(async (err, req, res, next) => {
   return streamPage(res, html`<${ErrorPage} request="${request}"/>`, css);
 });
 
-function start(appPort) {
+function startServer(appPort) {
   return new Promise((resolve) => {
     const server = app.listen(appPort, async () => {
       try {
+        recommendManager.start();
         // eslint-disable-next-line no-console
         console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
         // eslint-disable-next-line no-console
@@ -628,30 +636,40 @@ function start(appPort) {
   });
 }
 
-async function resetConnection() {
-  await dbConnection.reset();
-}
-
-process.on('SIGINT', () => {
+async function park() {
   if (dbConnection) {
-    dbConnection.close().then(() => {
+    try {
+      await dbConnection.close();
       // eslint-disable-next-line no-console
       console.warn('Database connection closed successfully');
       process.exit(0);
-    }).catch((err) => {
+    } catch (err) {
       // eslint-disable-next-line no-console
       console.warn('Database connection closed with error', err);
       process.exit(1);
-    });
+    }
   }
-});
+}
+
+process.on('SIGINT', park);
 
 if (require.main === module) {
-  start(port);
+  startServer(port);
 } else {
   module.exports = {
-    start,
+    async start(...args) {
+      const server = await startServer(...args);
+      return async () => {
+        await park();
+        server.close();
+      };
+    },
+    resetDb() {
+      return dbConnection.reset();
+    },
+    closeDb() {
+      return dbConnection.close();
+    },
     getConnection: () => dbConnection,
-    resetConnection,
   };
 }

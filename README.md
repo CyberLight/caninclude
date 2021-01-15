@@ -40,6 +40,7 @@ Please, see **Demo** [here](https://caninclude.glitch.me)
 ## Environment variables
 * `COOKIE_KEY` - a key for sign cookies `type: String`
 * `FEEDBACK_DAILY_LIMIT` - a limit count of feedbacks daily `type: Integer`
+* `RECOMMEND_CLEAR_CACHE_CRON_TIME` - string in [cron time format](https://github.com/kelektiv/node-cron#cron-ranges). Default value: `0 */30 * * * *` (every 30 minutes)
 
 ## Project structure
 * **.data** - a folder for sqlite database
