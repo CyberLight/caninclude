@@ -31,6 +31,7 @@
         "codeceptjs:headless": "HEADLESS=true codeceptjs run --steps",
         "codeceptjs:ui": "codecept-ui --app",
         "cc:tools": "codeceptjs --",
+        "cc:gt": "codeceptjs gt",
         "cc:def": "codeceptjs def"
     },
     "keywords": [],

@@ -43,6 +43,8 @@ exports.config = {
     I: './testing/steps/steps_file.js',
     MainPage: './testing/pages/Main.js',
     CommonPage: './testing/pages/Common.js',
+    DetailPage: './testing/pages/Detail.js',
+    DataTables: './testing/datatables/index.js',
   },
   // eslint-disable-next-line global-require
   bootstrap: bootstrap.bootstrap,
