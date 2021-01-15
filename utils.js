@@ -56,6 +56,7 @@ class DbConnection {
         this.isOpen = false;
         this.initConnection();
         this.resetCallbacks = [];
+        this.closeCallbacks = [];
     }
 
     initConnection() {
@@ -66,7 +67,7 @@ class DbConnection {
       this.database.on('close', () => {
         this.isOpen = false;
       });
-      this.close = util.promisify(this.database.close).bind(this.database);
+      this.asyncClose = util.promisify(this.database.close).bind(this.database);
     }
 
     setup() {
@@ -205,15 +206,36 @@ class DbConnection {
       this.resetCallbacks.push(cb);
     }
 
+    set onClose(cb) {
+      this.closeCallbacks.push(cb);
+    }
+
+    callResetCallbacks() {
+      if (this.resetCallbacks.length) {
+        this.resetCallbacks.map(cb => typeof cb === 'function' && cb())
+      }
+    }
+
+    callCloseCallbacks() {
+      if (this.closeCallbacks.length) {
+        this.closeCallbacks.map(cb => typeof cb === 'function' && cb())
+      }
+    }
+
+    async close() {
+      if (this.isOpen) {
+        await this.asyncClose();
+      }
+      this.callCloseCallbacks();
+    }
+
     async reset() {
       if(this.isOpen) {
         await this.close();
         this.database = new sqlite3.Database(this.dbFile);
         this.initConnection();
         this.setup();
-        if (this.resetCallbacks.length) {
-          this.resetCallbacks.map(cb => typeof cb === 'function' && cb())
-        }
+        this.callResetCallbacks();
       }
     }
 }
@@ -709,29 +731,45 @@ function getBarCssByValues(left, right, total) {
     }
 }
 
-class CronDbManger extends DbManager {
+class CronDbManager extends DbManager {
   startCronJob({ cronTime, onTick, ...otherConfigProps }) {
-    this.cron = new CronJob({ cronTime, onTick, runOnInit: true, ...otherConfigProps });
-    this.cron.start();
+    if (!this.cron) {
+      this.cron = new CronJob({ cronTime, onTick, runOnInit: true, ...otherConfigProps });
+      this.cron.start();
+    }
   }
   stopCronJob() {
-    this.cron.stop();
+    if (this.cron) {
+      this.cron.stop();
+      this.cron = null;
+    }
   }
 }
 
-class SimpleRecommendManager extends CronDbManger {
+class SimpleRecommendManager extends CronDbManager {
   constructor(conn) {
     super(conn);
+    this.conn.onUpdate = () => this.restart();
+    this.conn.onClose = () => this.stop();
+    this.cache = {};
+  }
+
+  start() {
     this.startCronJob({
       cronTime: process.env.RECOMMEND_CLEAR_CACHE_CRON_TIME || '0 */30 * * * *',
       onTick: () => {
         this.cache = {};
       }
     });
-    this.conn.onUpdate = () => {
-      this.stopCronJob();
-    };
-    this.cache = {};
+  }
+
+  stop() {
+    this.stopCronJob();
+  }
+
+  restart() {
+    this.stop();
+    this.start();
   }
 
   async getFromCacheOrQuery(childTagName, parentTagName) {
@@ -741,7 +779,7 @@ class SimpleRecommendManager extends CronDbManger {
     }
 
     const record = await this.getAsync(`
-      select child, parent, count, (julianday('now') - julianday(updatedAt)) / 365 as attenuation_factor
+      select child, parent, count, (julianday('now') - julianday(created)) / 365 as attenuation_factor
       from history
       where child=? order by attenuation_factor ASC, count DESC LIMIT 1`,
       [parentTagName]);

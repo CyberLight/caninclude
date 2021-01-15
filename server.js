@@ -602,10 +602,11 @@ app.use(async (err, req, res, next) => {
   return streamPage(res, html`<${ErrorPage} request="${request}"/>`, css);
 });
 
-function start(appPort) {
+function startServer(appPort) {
   return new Promise((resolve) => {
     const server = app.listen(appPort, async () => {
       try {
+        recommendManager.start();
         // eslint-disable-next-line no-console
         console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
         // eslint-disable-next-line no-console
@@ -635,30 +636,40 @@ function start(appPort) {
   });
 }
 
-async function resetConnection() {
-  await dbConnection.reset();
-}
-
-process.on('SIGINT', () => {
+async function park() {
   if (dbConnection) {
-    dbConnection.close().then(() => {
+    try {
+      await dbConnection.close();
       // eslint-disable-next-line no-console
       console.warn('Database connection closed successfully');
       process.exit(0);
-    }).catch((err) => {
+    } catch (err) {
       // eslint-disable-next-line no-console
       console.warn('Database connection closed with error', err);
       process.exit(1);
-    });
+    }
   }
-});
+}
+
+process.on('SIGINT', park);
 
 if (require.main === module) {
-  start(port);
+  startServer(port);
 } else {
   module.exports = {
-    start,
+    async start(...args) {
+      const server = await startServer(...args);
+      return async () => {
+        await park();
+        server.close();
+      };
+    },
+    resetDb() {
+      return dbConnection.reset();
+    },
+    closeDb() {
+      return dbConnection.close();
+    },
     getConnection: () => dbConnection,
-    resetConnection,
   };
 }
