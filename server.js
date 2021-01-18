@@ -420,6 +420,7 @@ queryRouter.get('/include', [
     feedbacks: await feedbackManager.getLastFeedbacks(queryParams),
     canAddFeedback,
     recommendResult,
+    decorationType: process.env.MAIN_PAGE_DECORATION_TYPE,
   };
 
   streamPage(res, html`<${App} ...${props}/>`, css);
