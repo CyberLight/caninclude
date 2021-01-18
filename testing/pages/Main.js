@@ -17,6 +17,9 @@ module.exports = {
       return locate('a.table__link').at(index);
     },
   },
+  decoration: {
+    lightRope: locate('ul.lightrope'),
+  },
   counters: {
     requests: locate('p.counter').inside('footer'),
   },
