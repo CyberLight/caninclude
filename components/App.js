@@ -30,12 +30,15 @@ class App extends Component {
     feedbacks,
     canAddFeedback,
     recommendResult,
+    decorationType,
   }) {
     const hasTags = tags.length > 0;
+    const showNYRibbon = decorationType === 'NY_LIGHT_RIBBON';
+
     return html`
             <${Main} form="${form}" tags="${tags}" request="${request}">
                 ${!userAcceptCookie && html`<${CookieConsent}/>`}
-                ${!hasTags && html`<${Ribbon} />`}
+                ${!hasTags && showNYRibbon && html`<${Ribbon} />`}
                 <main class="content">
                     <${Recommends} recommendation="${recommendResult}" />
                     <${Tips} tips="${tips}"/>

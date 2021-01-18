@@ -32,6 +32,9 @@ exports.config = {
     DbHelper: {
       require: './testing/helpers/dbHelper.js',
     },
+    EnvHelper: {
+      require: './testing/helpers/envHelper.js',
+    },
     ResembleHelper: {
       require: 'codeceptjs-resemblehelper',
       screenshotFolder: './testing/output/',

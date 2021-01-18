@@ -553,6 +553,7 @@ app.get('/', withCatch(async (req, res) => {
     userAcceptCookie: req.session.userAcceptCookie,
     showFeedback: undefined,
     showFeedbacks: undefined,
+    decorationType: process.env.MAIN_PAGE_DECORATION_TYPE,
   };
   streamPage(res, html`<${App} ...${props}/>`, css);
 }));
@@ -671,5 +672,8 @@ if (require.main === module) {
       return dbConnection.close();
     },
     getConnection: () => dbConnection,
+    setEnv(name, value) {
+      process.env[name] = value;
+    },
   };
 }
