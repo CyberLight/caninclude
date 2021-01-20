@@ -746,7 +746,7 @@ class CronDbManager extends DbManager {
   }
 }
 
-class SimpleRecommendManager extends CronDbManager {
+class BaseCronDbManager extends CronDbManager {
   constructor(conn) {
     super(conn);
     this.conn.onUpdate = () => this.restart();
@@ -754,9 +754,13 @@ class SimpleRecommendManager extends CronDbManager {
     this.cache = {};
   }
 
+  setCronTime(value) {
+    this.cronTime = value;
+  }
+
   start() {
     this.startCronJob({
-      cronTime: process.env.RECOMMEND_CLEAR_CACHE_CRON_TIME || '0 */30 * * * *',
+      cronTime: this.cronTime,
       onTick: () => {
         this.cache = {};
       }
@@ -772,10 +776,29 @@ class SimpleRecommendManager extends CronDbManager {
     this.start();
   }
 
+  hasKey(cacheKey) {
+    return typeof this.cache[cacheKey] !== 'undefined';
+  }
+
+  getByKey(cacheKey) {
+    return this.cache[cacheKey];
+  }
+
+  setByKey(cacheKey, value) {
+    this.cache[cacheKey] = value;
+  }
+}
+
+class SimpleRecommendManager extends BaseCronDbManager {
+  constructor(conn) {
+    super(conn);
+    this.setCronTime(process.env.RECOMMEND_CLEAR_CACHE_CRON_TIME || '0 */30 * * * *');
+  }
+
   async getFromCacheOrQuery(childTagName, parentTagName) {
     const cacheKey = `${childTagName}${parentTagName}`;
-    if (typeof this.cache[cacheKey] !== 'undefined') {
-      return this.cache[cacheKey];
+    if (this.hasKey(cacheKey)) {
+      return this.getByKey();
     }
 
     const record = await this.getAsync(`
@@ -784,9 +807,74 @@ class SimpleRecommendManager extends CronDbManager {
       where child=? order by attenuation_factor ASC, count DESC LIMIT 1`,
       [parentTagName]);
 
-    this.cache[cacheKey] = record;
-
+    this.setByKey(cacheKey, record);
     return record;
+  }
+}
+
+class StatLikesManager extends BaseCronDbManager {
+  constructor(conn) {
+    super(conn);
+    this.setCronTime(process.env.RECOMMEND_CLEAR_CACHE_CRON_TIME || '0 */30 * * * *');
+  }
+
+  async getMostLiked() {
+    const cacheKey = 'CACHED_LIKED_RESULT';
+    if (this.hasKey(cacheKey)) {
+      return this.getByKey(cacheKey);
+    }
+
+    const records = await this.allAsync(`
+    select * from (select
+      parent,
+      child,
+      SUM(case type
+        when 'like' then 1
+        else 0
+      end) display,
+      SUM(case type
+        when 'dislike' then 1
+        else 0
+      end) disliked,
+      count(id) as count from likes
+      where type in ('like', 'dislike')
+      group by parent, child
+      order by count desc
+      limit 10) where display > disliked;`);
+
+    if (records && records.length) {
+      this.setByKey(cacheKey, records);
+    }
+    return records;
+  }
+
+  async getMostDisliked() {
+    const cacheKey = 'CACHED_DISLIKED_RESULT';
+    if (this.hasKey(cacheKey)) {
+      return this.getByKey(cacheKey);
+    }
+
+    const records = await this.allAsync(`select * from (select
+      parent,
+      child,
+      SUM(case type
+        when 'like' then 1
+        else 0
+      end) liked,
+      SUM(case type
+        when 'dislike' then 1
+        else 0
+      end) display,
+      count(id) as count from likes
+      where type in ('like', 'dislike')
+      group by parent, child
+      order by count desc
+      limit 10) where liked < display;`);
+
+    if (records && records.length) {
+      this.setByKey(cacheKey, records);
+    }
+    return records;
   }
 }
 
@@ -802,3 +890,4 @@ module.exports.InvitesManager = InvitesManager;
 module.exports.RecordNotFoundError = RecordNotFoundError;
 module.exports.getBarCssByValues = getBarCssByValues;
 module.exports.SimpleRecommendManager = SimpleRecommendManager;
+module.exports.StatLikesManager = StatLikesManager;

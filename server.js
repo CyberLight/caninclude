@@ -23,6 +23,7 @@ const {
   RecordNotFoundError,
   StatManager,
   SimpleRecommendManager,
+  StatLikesManager,
 } = require('./utils');
 
 const App = require('./components/App');
@@ -43,6 +44,12 @@ const historyManager = new HistoryManager(dbConnection);
 const invitesManager = new InvitesManager(dbConnection);
 const statManager = new StatManager(dbConnection);
 const recommendManager = new SimpleRecommendManager(dbConnection);
+const statLikesManager = new StatLikesManager(dbConnection);
+
+function startManagers() {
+  recommendManager.start();
+  statLikesManager.start();
+}
 
 const port = process.env.PORT || 3000;
 let db = null;
@@ -539,10 +546,14 @@ app.get('/', withCatch(async (req, res) => {
   await counter.load();
   const tagStats = await historyManager.getLastBy();
   const twoWeeksStat = await statManager.getStatCountersFor2Weeks();
+  const mostLiked = await statLikesManager.getMostLiked();
+  const mostDisliked = await statLikesManager.getMostDisliked();
   const props = {
     form: { parent: '', child: '' },
     tags: [],
     tagStats,
+    mostLiked,
+    mostDisliked,
     request: {
       count: counter.count,
       uniqCount: counter.uniqCount,
@@ -607,7 +618,7 @@ function startServer(appPort) {
   return new Promise((resolve) => {
     const server = app.listen(appPort, async () => {
       try {
-        recommendManager.start();
+        startManagers();
         // eslint-disable-next-line no-console
         console.warn('usedOlderVersion:', usedOlderVersion, 'current version:', process.version);
         // eslint-disable-next-line no-console
