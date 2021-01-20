@@ -20,6 +20,10 @@ module.exports = function customSteps() {
       const actualRowValues = await this.grabTextFromAll(rowLocator).then((row) => row.map((s) => s.split('\t')));
       expect(actualRowValues).toStrictEqual(expected);
     },
+    async checkAllLabels(rowLocator, expected) {
+      const actualRowValues = await this.grabTextFromAll(rowLocator);
+      expect(actualRowValues).toStrictEqual(expected);
+    },
     async checkSessionCookieContent() {
       this.seeCookie('session.sig');
       this.seeCookie('session');

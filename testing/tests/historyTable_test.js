@@ -19,7 +19,7 @@ Scenario('Max rows in last quick results table', async ({ I }) => {
   const MaxCountOfRows = 10;
   const rows = await I.haveANumberOfHistoryItemsInDb(20);
   MainPage.amOnPage();
-  I.seeNumberOfVisibleElements(MainPage.tables.rows, MaxCountOfRows);
+  I.seeNumberOfVisibleElements(MainPage.tables.quickResultsRows, MaxCountOfRows);
   await I.checkTableRow(MainPage.tables.row(1), MainPage.helpers.getLastRow(rows, ['result']));
 }).tag('@db');
 
