@@ -74,12 +74,39 @@ class DbHelper extends Helper {
     return row;
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  async haveLikeItemInDb({
+    parent = faker.random.arrayElement(htmlTags),
+    child = faker.random.arrayElement(htmlTags),
+    user = faker.random.uuid(),
+    type = faker.random.arrayElement(['like', 'dislike', 'unknown']),
+  } = {}) {
+    const con = promisifyConnection(getConnection());
+    const lastId = await con.run(
+      'INSERT INTO likes(user, parent, child, type) VALUES(?,?,?,?)',
+      [user, parent, child, type],
+    );
+    const row = await con.get('SELECT * FROM likes WHERE id = ?', [lastId]);
+    return row;
+  }
+
   async haveHistoryItemsInDb(items) {
     const results = [];
     // eslint-disable-next-line no-restricted-syntax
     for (const item of items) {
       // eslint-disable-next-line no-await-in-loop
       const row = await this.haveHistoryItemInDb(item);
+      results.push(row);
+    }
+    return results;
+  }
+
+  async haveLikeItemsInDb(items) {
+    const results = [];
+    // eslint-disable-next-line no-restricted-syntax
+    for (const item of items) {
+      // eslint-disable-next-line no-await-in-loop
+      const row = await this.haveLikeItemInDb(item);
       results.push(row);
     }
     return results;
