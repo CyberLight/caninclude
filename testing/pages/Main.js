@@ -1,5 +1,14 @@
 const { I } = inject();
 const SearchForm = locate('form#search');
+const QuickResultsSection = locate('table.quick-results__table').after(
+  locate('.quick-results__header').withText('Quick Results'),
+);
+const MostLikedSection = locate('table.quick-results__table').after(
+  locate('.quick-results__header').withText('Most liked'),
+);
+const MostDislikedSection = locate('table.quick-results__table').after(
+  locate('.quick-results__header').withText('Most disliked'),
+);
 
 module.exports = {
   labels: {
@@ -10,6 +19,10 @@ module.exports = {
   tables: {
     head: locate('tr.table__head').inside('table.quick-results__table'),
     rows: locate('tr.table__row').inside('table.quick-results__table'),
+    quickResultsRows: locate('tr.table__row').inside(QuickResultsSection),
+    quickResultsHead: locate('tr.table__head').inside(QuickResultsSection),
+    mostLikedRows: locate('tr.table__row').inside(MostLikedSection),
+    mostDislikedRows: locate('tr.table__row').inside(MostDislikedSection),
     row(index) {
       return locate(this.rows).at(index);
     },
