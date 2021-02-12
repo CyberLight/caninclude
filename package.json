@@ -4,8 +4,8 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "test": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --steps",
-        "test:ci": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --reporter mocha-junit-reporter --steps",
+        "test": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --steps --grep='(?=.*)^(?!.*@skip)'",
+        "test:ci": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --reporter mocha-junit-reporter --steps --grep='(?=.*)^(?!.*@skip)'",
         "spec:fix": "node specfix && node makeIndex",
         "crawl": "node crawl && node specfix && node makeIndex",
         "start": "pm2 start ecosystem.config.js --env production --no-daemon",

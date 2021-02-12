@@ -5,7 +5,7 @@ Feature('mainPage');
 Scenario('First page visit', async ({ I }) => {
   I.amOnPage('/');
   I.seeTextEquals('Can I Include*', MainPage.labels.head);
-  await I.checkAllLabels(MainPage.labels.quickResults, ['Last 0 Most liked', 'Last 0 Quick Results', 'Last 0 Most disliked']);
+  await I.checkAllLabels(MainPage.labels.quickResults, ['Last 0 Quick Results']);
   I.seeNumberOfVisibleElements(MainPage.tables.quickResultsRows, 0);
   await I.checkTableColumnNames(MainPage.tables.quickResultsHead, ['Child', 'Parent', 'Can Include?', 'Count', 'Link to']);
   await I.checkRequestsCounterValues(MainPage.counters.requests, `Counter: 1 req | 1 uniq | ${new Date().toJSON().slice(0, 10)}`);
@@ -32,7 +32,7 @@ Data(dataTable1)
     MainPage.amOnPage();
     I.seeNumberOfVisibleElements(MainPage.tables.mostLikedRows, current.expectedCountRows);
     await I.checkTableRow(MainPage.tables.mostLikedRows, current.expectedRows);
-  }).tag('@db');
+  }).tag('@db').tag('@skip');
 
 const dataTable2 = DataTables.likes.dislikesTable;
 dataTable2.add('One dislike');
@@ -46,4 +46,4 @@ Data(dataTable2)
     MainPage.amOnPage();
     I.seeNumberOfVisibleElements(MainPage.tables.mostDislikedRows, current.expectedCountRows);
     await I.checkTableRow(MainPage.tables.mostDislikedRows, current.expectedRows);
-  }).tag('@db');
+  }).tag('@db').tag('@skip');
