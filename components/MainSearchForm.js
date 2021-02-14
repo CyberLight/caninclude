@@ -1,14 +1,17 @@
 const { html, Component } = require('htm/preact');
-const ColorText = require('./ColorText');
 const SwapButton = require('./SwapButton');
+const Logo = require('./Logo');
 
 class MainSearchForm extends Component {
-    render({ parent = '', child = '', show = true, specVersion }) {
-        return show && html`
+  // eslint-disable-next-line class-methods-use-this
+  render({
+    parent = '', child = '', show = true, specVersion, logoUrl, logoAlt,
+  }) {
+    return show && html`
         <section class="search">
             <h1 class="search__title">Check when a tag can be included in another tag</h1>
             <form id="search" autocomplete="off" class="search__form" action="/can/include/" method="get">
-                <h2 class="head head--big" aria-label="Can I Include?"><${ColorText}>Can I Include*</${ColorText}></h2>
+                <${Logo} logoUrl="${logoUrl}" logoAlt="${logoAlt}"/>
                 <p class="search__spec-version"><span class="head head--small">Based on HTML spec | Last Updated ${specVersion}</span></p><br/>
                 <div class="search__container">
                     <input autofocus aria-label="Child tag name" type="text" id="child" name="child" autocomplete="off" placeholder="Child tag name" value="${child.toLowerCase()}"/>
@@ -18,7 +21,7 @@ class MainSearchForm extends Component {
                 </div>
             </form>
         </section>`;
-    }
+  }
 }
 
 module.exports = MainSearchForm;
