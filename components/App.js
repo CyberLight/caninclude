@@ -31,6 +31,8 @@ class App extends Component {
     canAddFeedback,
     recommendResult,
     decorationType,
+    logoUrl,
+    logoAlt,
   }) {
     const hasTags = tags.length > 0;
     const showNYRibbon = decorationType === 'NY_LIGHT_RIBBON';
@@ -56,7 +58,7 @@ class App extends Component {
                   <${Section} tag="${tags[2]}" accent="last"/>
               </${Tags}>
               <${About} show="${!hasTags}">
-                  <${MainSearchForm} ...${form} show="${!hasTags}" specVersion="${specVersion}"/>
+                  <${MainSearchForm} ...${form} show="${!hasTags}" specVersion="${specVersion}" logoUrl="${logoUrl}" logoAlt="${logoAlt}"/>
                   <div class="quick-results-wrapper">
                     <${QuickResults} tagStats="${tagStats}"/>
                   </div>

@@ -565,6 +565,8 @@ app.get('/', withCatch(async (req, res) => {
     showFeedback: undefined,
     showFeedbacks: undefined,
     decorationType: process.env.MAIN_PAGE_DECORATION_TYPE,
+    logoUrl: process.env.LOGO_URL,
+    logoAlt: process.env.LOGO_ALT,
   };
   streamPage(res, html`<${App} ...${props}/>`, css);
 }));
