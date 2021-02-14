@@ -43,6 +43,8 @@ Please, see **Demo** [here](https://caninclude.glitch.me)
 * `RECOMMEND_CLEAR_CACHE_CRON_TIME` - string in [cron time format](https://github.com/kelektiv/node-cron#cron-ranges). Default value: `0 */30 * * * *` (every 30 minutes)
 * `MAIN_PAGE_DECORATION_TYPE` - main page decoration mode or type `type: String`, possible values: 
     * **NY_LIGHT_RIBBON**
+* `LOGO_URL` - URL of the logo file to be included in the src attribute of the img element
+* `LOGO_ALT` - text for alt attribute of img element
 
 ## Project structure
 * **.data** - a folder for sqlite database
