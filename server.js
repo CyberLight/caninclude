@@ -189,54 +189,68 @@ function createSetOfKeyWords(tag, categoryName, forceAddTagName = false) {
   return keyWordSet;
 }
 
-function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
-  const childKeyWordsSet = createSetOfKeyWords(childTag, 'Categories', true);
-  const parentKeyWordsSet = createSetOfKeyWords(parentTag, 'ContentModel');
-  const intersection = new Set([...parentKeyWordsSet].filter((x) => childKeyWordsSet.has(x)));
-  const initialMatches = [...intersection];
+function excludeFrom(sourceSet, excludeSet) {
+  return new Set([...sourceSet].filter((kw) => !excludeSet.has(kw)));
+}
 
+function canInclude(childTag, parentTag, childFormatted, parentFormatted) {
   const {
-    negativeKeywords,
+    negativeKeywords: parentNegativeKeywords,
     conditionalKeywords: parentConditionalKeywords,
   } = parentTag.props.sections.ContentModel;
-  const { conditionalKeywords } = childTag.props.sections.Categories;
-  const negativeKeywordSet = new Set(negativeKeywords);
-  const filteredParentConditionalKeywords = parentConditionalKeywords.filter(
-    (w) => !negativeKeywordSet.has(w),
+  const {
+    conditionalKeywords: childConditionalKeywords,
+  } = childTag.props.sections.Categories;
+  const parentNegativeKeywordsSet = new Set(parentNegativeKeywords);
+
+  const childKeyWordsSet = excludeFrom(createSetOfKeyWords(childTag, 'Categories', true), new Set(childConditionalKeywords));
+  const parentKeyWordsSet = createSetOfKeyWords(parentTag, 'ContentModel');
+  const excludeParentNegativeKeyWords = (kw) => !parentNegativeKeywordsSet.has(kw);
+  const includeNegativeChildKeywordInParent = (kw) => childKeyWordsSet.has(kw);
+
+  const intersection = new Set([...parentKeyWordsSet].filter(
+    excludeParentNegativeKeyWords,
+  ).filter(
+    includeNegativeChildKeywordInParent,
+  ));
+
+  const initialMatches = [...intersection];
+
+  const negativeIntersection = [...childKeyWordsSet].filter(
+    (kw) => parentNegativeKeywordsSet.has(kw),
   );
 
-  conditionalKeywords.forEach((el) => {
-    childKeyWordsSet.delete(el);
-    intersection.delete(el);
-  });
+  const hasNegative = negativeIntersection.length;
 
-  const hasNegativeKeywords = new Set(negativeKeywords.filter((x) => childKeyWordsSet.has(x)));
-
-  if (parentKeyWordsSet.has('#transparent') && !negativeKeywordSet.has(`#the-${childFormatted}-element`)) {
+  if (parentKeyWordsSet.has('#transparent') && !hasNegative) {
     return {
       type: 'Doubt',
       doubt: true,
       text: 'I doubt',
       message: messages.makeTransparentContentWarning(parentFormatted),
       matched: initialMatches,
-      negative: new Set(negativeKeywords),
+      negative: new Set(negativeIntersection),
     };
-  } if (!intersection.size || hasNegativeKeywords.has(`#the-${childFormatted}-element`) || hasNegativeKeywords.size) {
+  }
+
+  if (!intersection.size || hasNegative) {
     return {
       type: 'No',
       fail: true,
       text: 'No, you can\'t!',
       matched: initialMatches,
-      negative: new Set(hasNegativeKeywords),
-      conditional: filteredParentConditionalKeywords,
+      negative: new Set(negativeIntersection),
+      conditional: parentConditionalKeywords,
     };
-  } if (intersection.size) {
+  }
+
+  if (intersection.size) {
     return {
       type: 'Yes',
       success: true,
       text: 'Yes, you can!',
       matched: initialMatches,
-      negative: new Set(negativeKeywords),
+      negative: new Set(parentNegativeKeywords),
     };
   }
 

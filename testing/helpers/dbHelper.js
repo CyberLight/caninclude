@@ -6,24 +6,27 @@ const faker = require('faker');
 
 const { getConnection } = require('../../server');
 
-const htmlTags = [
-  'a', 'abbr', 'address', 'area', 'article', 'aside',
-  'audio', 'b', 'base', 'bdi', 'bdo', 'blockquote',
-  'body', 'br', 'button', 'canvas', 'caption', 'cite',
-  'code', 'col', 'colgroup', 'data', 'datalist', 'dd',
-  'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt',
-  'em', 'embed', 'fieldset', 'figure', 'footer', 'form',
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header',
-  'hgroup', 'hr', 'html', 'i', 'iframe', 'img', 'input',
-  'ins', 'kbd', 'keygen', 'label', 'legend', 'li', 'link',
-  'main', 'map', 'mark', 'menu', 'menuitem', 'meta', 'meter',
-  'nav', 'noscript', 'object', 'ol', 'optgroup', 'option',
-  'output', 'p', 'param', 'pre', 'progress', 'q', 'rb', 'rp',
-  'rt', 'rtc', 'ruby', 's', 'samp', 'script', 'section',
-  'select', 'small', 'source', 'span', 'strong', 'style',
-  'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template',
-  'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr',
-  'track', 'u', 'ul', 'var', 'video', 'wbr'];
+const htmlTags = ['html', 'head', 'title', 'base', 'link', 'meta',
+  'style', 'body', 'article', 'section', 'nav',
+  'aside', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'hgroup', 'header', 'footer', 'address', 'p',
+  'hr', 'pre', 'blockquote', 'ol', 'ul', 'menu',
+  'li', 'dl', 'dt', 'dd', 'figure', 'figcaption',
+  'main', 'div', 'a', 'em', 'strong', 'small', 's',
+  'cite', 'q', 'dfn', 'abbr', 'ruby', 'rt', 'rp',
+  'data', 'time', 'code', 'var', 'samp', 'kbd',
+  'sub', 'sup', 'i', 'b', 'u', 'mark', 'bdi',
+  'bdo', 'span', 'br', 'wbr', 'ins', 'del',
+  'picture', 'source', 'img', 'iframe', 'embed',
+  'object', 'param', 'video', 'audio', 'track',
+  'map', 'area', 'table', 'caption', 'colgroup',
+  'col', 'tbody', 'thead', 'tfoot', 'tr', 'td',
+  'th', 'form', 'label', 'input', 'button',
+  'select', 'datalist', 'optgroup', 'option',
+  'textarea', 'output', 'progress', 'meter',
+  'fieldset', 'legend', 'details', 'summary',
+  'dialog', 'script', 'noscript', 'template',
+  'slot', 'canvas'];
 
 function promisifyConnection(conn) {
   return {

@@ -20,10 +20,11 @@ const keywordsMapping = {};
       // eslint-disable-next-line no-restricted-syntax
       for (const element of obj.elements) {
         if (typeof element === 'string') {
-          const canContinue = /,/.test(element) && !/./.test(element);
+          const canContinue = /,/.test(element);
+          const ifThenCondition = /:/.test(element);
           const hasOrAnd = /(\b(and|or)\b)/.test(element);
           prevNegative = /(\b([Nn]o|[Nn]ot)\b(?! (more than one)))/.test(element) || (prevNegative && (hasOrAnd || canContinue));
-          prevCondition = /(\b([Ii]f|[Uu]nless)\b)/.test(element) || (prevCondition && (hasOrAnd || canContinue));
+          prevCondition = /(\b([Ii]f|[Uu]nless)\b)/.test(element) || (prevCondition && (hasOrAnd || canContinue || ifThenCondition));
         } else {
           keywordsMapping[element.hashText] = element;
           if (prevNegative) {

@@ -26,4 +26,31 @@ module.exports = {
       recommendationText: 'Also looking at this pair of tags <span/> inside <h1/>',
     },
   }),
+  tagPairs: new DataTableObject({
+    'img inside button': {
+      child: 'img',
+      parent: 'button',
+      resultSectionImg: 'result_yes.png',
+    },
+    'a inside a': {
+      child: 'a',
+      parent: 'a',
+      resultSectionImg: 'result_no.png',
+    },
+    'a inside label': {
+      child: 'a',
+      parent: 'label',
+      resultSectionImg: 'result_yes.png',
+    },
+    'img inside a': {
+      child: 'img',
+      parent: 'a',
+      resultSectionImg: 'result_doubt.png',
+    },
+    'label inside a': {
+      child: 'label',
+      parent: 'a',
+      resultSectionImg: 'result_no.png',
+    },
+  }),
 };
