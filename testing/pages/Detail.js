@@ -6,6 +6,9 @@ module.exports = {
     head: locate('h2.head').inside('header'),
     recommendText: locate('.recommends__text').inside('.recommends'),
   },
+  sections: {
+    result: locate('div.section-result__container'),
+  },
   amOnPage(child, parent) {
     I.amOnPage(`/can/include?child=${child}&parent=${parent}`);
     I.waitForVisible(this.labels.head);
