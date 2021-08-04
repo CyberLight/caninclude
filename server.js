@@ -504,7 +504,7 @@ async function countRequests(req, res, next) {
   } = req.query;
   if (!AppInTest) {
     // eslint-disable-next-line no-console
-    console.log(req.url, ip.split(',')[0], req.session.role || 'norole', req.session.user || 'anonymous');
+    console.log('', req.url, ip.split(',')[0], req.session.role || 'norole', req.session.user || 'anonymous');
   }
   if ([like, dislike, unlike, undislike].some((x) => typeof x !== 'undefined')) return next();
   await counter.register(ip.split(',')[0]);
