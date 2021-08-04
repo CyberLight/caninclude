@@ -4,7 +4,9 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "test": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --steps --grep='(?=.*)^(?!.*@skip)'",
+        "test:base": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --steps",
+        "test:only": "npm run test:base -- --grep=@only",
+        "test": "npm run test:base -- --grep='(?=.*)^(?!.*@skip)'",
         "test:ci": "rm -rf ./testing/output/*.png && NODE_ENV=test HEADLESS=true codeceptjs run --reporter mocha-junit-reporter --steps --grep='(?=.*)^(?!.*@skip)'",
         "spec:fix": "node specfix && node makeIndex",
         "crawl": "node crawl && node specfix && node makeIndex",
