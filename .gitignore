@@ -138,3 +138,5 @@ testing/screenshots/diff/*
 
 testing/reports/*
 !testing/reports/.keep
+
+public/
