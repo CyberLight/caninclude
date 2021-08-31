@@ -441,6 +441,7 @@ queryRouter.get('/include', [
     feedbacks: await feedbackManager.getLastFeedbacks(queryParams),
     canAddFeedback,
     recommendResult,
+    headerTipHtmlContent: process.env.HEADER_TIPS_HTML_CONTENT,
   };
 
   streamPage(res, html`<${App} ...${props}/>`, css);
@@ -581,6 +582,7 @@ app.get('/', withCatch(async (req, res) => {
     decorationType: process.env.MAIN_PAGE_DECORATION_TYPE,
     logoUrl: process.env.LOGO_URL,
     logoAlt: process.env.LOGO_ALT,
+    headerTipHtmlContent: process.env.HEADER_TIPS_HTML_CONTENT,
   };
   streamPage(res, html`<${App} ...${props}/>`, css);
 }));

@@ -33,13 +33,14 @@ class App extends Component {
     decorationType,
     logoUrl,
     logoAlt,
+    headerTipHtmlContent,
   }) {
     const hasTags = tags.length > 0;
     const showNYRibbon = decorationType === 'NY_LIGHT_RIBBON';
     const showNYChina = decorationType === 'NY_CHINA';
 
     return html`
-      <${Main} form="${form}" tags="${tags}" request="${request}">
+      <${Main} form="${form}" tags="${tags}" request="${request}" headerTipHtmlContent="${headerTipHtmlContent}">
           ${!userAcceptCookie && html`<${CookieConsent}/>`}
           ${!hasTags && showNYRibbon && html`<${Ribbon} />`}
           ${!hasTags && showNYChina && html`<div class="china-new-year"/>`}
