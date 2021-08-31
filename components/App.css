@@ -972,6 +972,7 @@ input {
     border-radius: 0 20px 20px 50px;
     margin-right: 70px;
     max-width: 500px;
+    margin: auto;
 }
 
 .header-tips > a {
@@ -1000,6 +1001,7 @@ input {
     .header-tips {
         max-width: 340px;
         margin-right: 0;
+        margin: 0;
     }
 }
 
