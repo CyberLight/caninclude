@@ -122,7 +122,7 @@ class DbHelper extends Helper {
         parent: faker.random.arrayElement(htmlTags),
         child: faker.random.arrayElement(htmlTags),
         canInclude: faker.random.arrayElement(['yes', 'no', 'doubt']),
-        count: faker.random.number({ min: 1, max: 100 }),
+        count: faker.datatype.number({ min: 1, max: 100 }),
       };
       // eslint-disable-next-line no-await-in-loop
       const row = await this.haveHistoryItemInDb(item);
