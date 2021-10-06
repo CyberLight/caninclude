@@ -15,6 +15,7 @@ exports.config = {
       windowSize: '1200x900',
       waitForNavigation: 'networkidle0',
       chrome: {
+        executablePath: '/usr/bin/chromium',
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
