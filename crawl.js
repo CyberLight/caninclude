@@ -17,7 +17,7 @@ const options = {
     '--remote-debugging-port=9222',
   ],
   handleSIGINT: true,
-  executablePath: 'google-chrome-stable',
+  executablePath: '/usr/bin/chromium',
   headless: true,
   slowMo: 0,
   dumpio: false,
@@ -28,10 +28,12 @@ const options = {
   const page = await browser.newPage();
   await page.goto(Html5SpecURL, { waitUntil: 'load', timeout: 0 });
   const version = await page.$eval('#living-standard .pubdate', (el) => el.textContent);
+
   const result = await page.$$eval('h4[id^="the-"]~.element', (elements) => {
     function collectElements(el) {
       const foundElements = [];
       let parentNode = null;
+      const IncludeHTMLNodeNames = ['#text', 'EM'];
 
       const treeWalker = document.createTreeWalker(
         el,
@@ -40,7 +42,7 @@ const options = {
         {
           acceptNode(node) {
             return ((
-              node.nodeName === 'A' || (node.nodeName === '#text' && node.parentNode === parentNode)
+              node.nodeName === 'A' || (IncludeHTMLNodeNames.includes(node.nodeName) && node.parentNode === parentNode)
             ) && NodeFilter.FILTER_ACCEPT) || NodeFilter.FILTER_SKIP;
           },
         },
@@ -185,6 +187,7 @@ const options = {
       };
     });
   });
+
   await writeFileAsync('spec.json', JSON.stringify({ version, result }, ' ', 2));
   await browser.close();
 }());
