@@ -26,6 +26,7 @@ exports.config = {
           '--disable-extensions',
           '--remote-debugging-address=0.0.0.0',
           '--remote-debugging-port=9222',
+          '--font-render-hinting=none'
         ],
         defaultViewport: {
           width: 1200,
