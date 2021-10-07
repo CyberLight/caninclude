@@ -12,8 +12,8 @@ Data(quickItems)
     I.haveHistoryItemInDb(current.item);
     MainPage.amOnPage();
     I.saveElementScreenshot(MainPage.tables.row(1), current.image);
-    I.seeVisualDiff(current.image, {
-      tolerance: 5,
+    I.seeVisualDiffForElement(MainPage.tables.row(1), current.image, {
+      tolerance: 0,
       prepareBaseImage: false,
       scaleToSameSize: true,
       ignore: 'antialiasing',
