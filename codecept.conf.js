@@ -12,7 +12,7 @@ exports.config = {
     Puppeteer: {
       url: 'http://localhost:3000',
       show: false,
-      windowSize: process.env.WINDOW_SIZE || '1200x900',
+      windowSize: '1200x900',
       waitForNavigation: 'networkidle0',
       chrome: {
         executablePath: '/usr/bin/chromium',
@@ -27,6 +27,11 @@ exports.config = {
           '--remote-debugging-address=0.0.0.0',
           '--remote-debugging-port=9222',
         ],
+        defaultViewport: {
+          width: 1200,
+          height: 900,
+          deviceScaleFactor: 2,
+        },
       },
       waitForTimeout: 1000,
     },
