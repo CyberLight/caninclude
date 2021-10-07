@@ -33,7 +33,7 @@ jobs:
     - name: Run e2e tests
       run: npm run crawl && npm run test:ci
       env:
-        PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
+        WINDOW_SIZE: 1202x900
     - name: Publish e2e tests report in xunit/junit xml format
       uses: EnricoMi/publish-unit-test-result-action@v1.6
       if: always()

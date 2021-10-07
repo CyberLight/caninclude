@@ -12,7 +12,7 @@ exports.config = {
     Puppeteer: {
       url: 'http://localhost:3000',
       show: false,
-      windowSize: '1200x900',
+      windowSize: process.env.WINDOW_SIZE || '1200x900',
       waitForNavigation: 'networkidle0',
       chrome: {
         executablePath: '/usr/bin/chromium',
