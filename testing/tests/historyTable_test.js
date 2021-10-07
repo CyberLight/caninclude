@@ -12,7 +12,12 @@ Data(quickItems)
     I.haveHistoryItemInDb(current.item);
     MainPage.amOnPage();
     I.saveElementScreenshot(MainPage.tables.row(1), current.image);
-    I.seeVisualDiff(current.image, { tolerance: 0, prepareBaseImage: false });
+    I.seeVisualDiffForElement(MainPage.tables.row(1), current.image, {
+      tolerance: 0,
+      prepareBaseImage: false,
+      scaleToSameSize: true,
+      ignore: 'antialiasing',
+    });
   }).tag('@db');
 
 Scenario('Max rows in last quick results table', async ({ I }) => {

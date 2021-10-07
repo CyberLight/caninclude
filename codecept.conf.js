@@ -15,6 +15,7 @@ exports.config = {
       windowSize: '1200x900',
       waitForNavigation: 'networkidle0',
       chrome: {
+        executablePath: '/usr/bin/chromium',
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -26,6 +27,11 @@ exports.config = {
           '--remote-debugging-address=0.0.0.0',
           '--remote-debugging-port=9222',
         ],
+        defaultViewport: {
+          width: 1200,
+          height: 900,
+          deviceScaleFactor: 1,
+        },
       },
       waitForTimeout: 1000,
     },
