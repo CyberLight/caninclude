@@ -14,5 +14,9 @@ Data(dataTable1)
     const { child, parent, resultSectionImg } = current;
     DetailPage.amOnPage(child, parent);
     I.saveElementScreenshot(DetailPage.sections.result, resultSectionImg);
-    I.seeVisualDiff(resultSectionImg, { tolerance: 0, prepareBaseImage: false });
+    I.seeVisualDiff(resultSectionImg, {
+      tolerance: 0,
+      prepareBaseImage: false,
+      scaleToSameSize: true,
+    });
   });
