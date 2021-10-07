@@ -13,7 +13,7 @@ Data(quickItems)
     MainPage.amOnPage();
     I.saveElementScreenshot(MainPage.tables.row(1), current.image);
     I.seeVisualDiff(current.image, {
-      tolerance: 2,
+      tolerance: 5,
       prepareBaseImage: false,
       scaleToSameSize: true,
       ignore: 'antialiasing',

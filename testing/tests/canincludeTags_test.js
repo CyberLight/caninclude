@@ -15,7 +15,7 @@ Data(dataTable1)
     DetailPage.amOnPage(child, parent);
     I.saveElementScreenshot(DetailPage.sections.result, resultSectionImg);
     I.seeVisualDiff(resultSectionImg, {
-      tolerance: 2,
+      tolerance: 5,
       prepareBaseImage: false,
       scaleToSameSize: true,
       ignore: 'antialiasing',
