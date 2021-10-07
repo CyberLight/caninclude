@@ -8,6 +8,7 @@ module.exports = {
   },
   sections: {
     result: locate('div.section-result__container'),
+    left: locate('section.tag__section'),
   },
   amOnPage(child, parent) {
     I.amOnPage(`/can/include?child=${child}&parent=${parent}`);
