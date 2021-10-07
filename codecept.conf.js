@@ -30,7 +30,7 @@ exports.config = {
         defaultViewport: {
           width: 1200,
           height: 900,
-          deviceScaleFactor: 2,
+          deviceScaleFactor: 1,
         },
       },
       waitForTimeout: 1000,

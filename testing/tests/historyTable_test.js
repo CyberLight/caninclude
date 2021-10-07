@@ -13,9 +13,10 @@ Data(quickItems)
     MainPage.amOnPage();
     I.saveElementScreenshot(MainPage.tables.row(1), current.image);
     I.seeVisualDiff(current.image, {
-      tolerance: 0,
+      tolerance: 2,
       prepareBaseImage: false,
       scaleToSameSize: true,
+      ignore: 'antialiasing',
     });
   }).tag('@db');
 
