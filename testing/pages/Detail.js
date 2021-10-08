@@ -8,7 +8,7 @@ module.exports = {
   },
   sections: {
     result: locate('div.section-result__container'),
-    left: locate('section.tag__section'),
+    left: locate('section.tag__section').at(1),
   },
   amOnPage(child, parent) {
     I.amOnPage(`/can/include?child=${child}&parent=${parent}`);
@@ -18,5 +18,9 @@ module.exports = {
 
   seeRecommendationText(text) {
     I.seeTextEquals(text, this.labels.recommendText);
+  },
+
+  seeTextInTheCategorySection(text, location = 'left') {
+    I.seeTextEquals(text, this.sections[location].find(locate('div.tag__items')).at(1));
   },
 };
