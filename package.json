@@ -60,7 +60,7 @@
         "preact-render-to-string": "^5.1.6",
         "puppeteer": "^10.4.0",
         "serve-favicon": "^2.5.0",
-        "sqlite3": "^5.0.2",
+        "sqlite3": "^5.0.3",
         "uuid": "^8.0.0"
     },
     "devDependencies": {
