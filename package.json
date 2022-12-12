@@ -48,7 +48,7 @@
         "clean-css": "^4.2.3",
         "cookie-session": "^1.4.0",
         "cron": "^1.8.2",
-        "express": "^4.17.1",
+        "express": "^4.17.3",
         "express-validator": "^6.4.1",
         "htm": "^3.0.4",
         "html-validator": "^5.1.12",
